@@ -1,7 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
-import { Artwork } from '../types';
+import { Artwork, User } from '../types';
 import { getCulturalInsight } from '../services/geminiService';
+import { mockBackend } from '../services/mockBackend';
+import { toINRString } from '../utils/currency';
+
 
 interface Props {
   artwork: Artwork;
@@ -95,7 +98,7 @@ const ArtworkDetails: React.FC<Props> = ({ artwork, onClose, onAction, user }) =
             <div className="flex items-center justify-between pt-8 border-t border-white/10">
               <div>
                 <p className="text-xs text-zinc-500 uppercase font-bold mb-1">Price</p>
-                <p className="text-3xl font-bold text-white">${artwork.price.toLocaleString()}</p>
+                <p className="text-3xl font-bold text-white">{toINRString(artwork.price)}</p>
               </div>
               <button 
                 onClick={() => onAction(artwork)}

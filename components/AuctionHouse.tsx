@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Artwork, User, Bid } from '../types';
 import { mockBackend } from '../services/mockBackend';
+import { toINRString } from '../utils/currency';
 
 interface Props {
   user: User;
@@ -60,9 +61,9 @@ const AuctionHouse: React.FC<Props> = ({ user, artworks, onBidUpdate, onSelectAr
             </div>
           </div>
         </div>
-        <div className="bg-zinc-900/50 backdrop-blur-md border border-white/10 px-6 py-4 rounded-2xl text-right">
+          <div className="bg-zinc-900/50 backdrop-blur-md border border-white/10 px-6 py-4 rounded-2xl text-right">
           <p className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold mb-1">Your Available Credit</p>
-          <p className="text-2xl font-serif text-amber-500">${user.walletBalance.toLocaleString()}</p>
+          <p className="text-2xl font-serif text-amber-500">{toINRString(user.walletBalance)}</p>
         </div>
       </header>
 
@@ -100,7 +101,7 @@ const AuctionHouse: React.FC<Props> = ({ user, artworks, onBidUpdate, onSelectAr
                         art.bids.slice().reverse().slice(0, 3).map((bid, idx) => (
                           <div key={bid.id} className={`flex justify-between items-center text-xs p-2 rounded ${idx === 0 ? 'bg-amber-500/10 border border-amber-500/20' : 'text-zinc-400'}`}>
                             <span className="font-medium">{bid.bidderName}</span>
-                            <span className={`font-bold ${idx === 0 ? 'text-amber-500' : ''}`}>${bid.amount.toLocaleString()}</span>
+                            <span className={`font-bold ${idx === 0 ? 'text-amber-500' : ''}`}>{toINRString(bid.amount)}</span>
                           </div>
                         ))
                       ) : (
@@ -112,7 +113,7 @@ const AuctionHouse: React.FC<Props> = ({ user, artworks, onBidUpdate, onSelectAr
                 <div className="bg-white/5 rounded-2xl p-5 border border-white/5 mb-8">
                   <div className="flex justify-between items-end mb-1">
                     <span className="text-[10px] uppercase text-zinc-500 font-bold tracking-[0.2em]">Highest Current Bid</span>
-                    <span className="text-4xl font-serif text-white">${(art.currentBid || art.price).toLocaleString()}</span>
+                    <span className="text-4xl font-serif text-white">{toINRString(art.currentBid || art.price)}</span>
                   </div>
                   <div className="h-[2px] bg-zinc-800 rounded-full overflow-hidden mt-4">
                     <div className="h-full bg-amber-500 w-[75%] animate-pulse"></div>
@@ -121,12 +122,12 @@ const AuctionHouse: React.FC<Props> = ({ user, artworks, onBidUpdate, onSelectAr
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <button 
+                  <button 
                   onClick={() => handleQuickBid(art.id, art.currentBid || art.price)}
                   disabled={timers[art.id] === "CLOSED"}
                   className="bg-amber-600 hover:bg-amber-500 disabled:bg-zinc-800 disabled:text-zinc-500 text-white font-bold py-5 rounded-2xl transition-all shadow-xl shadow-amber-900/20 flex flex-col items-center justify-center leading-tight group/bid"
                 >
-                  <span className="text-xs opacity-70 mb-1 font-normal">Quick Bid +$500</span>
+                  <span className="text-xs opacity-70 mb-1 font-normal">Quick Bid +{toINRString(500)}</span>
                   {timers[art.id] === "CLOSED" ? "Auction Ended" : "Place Bid"}
                 </button>
                 <button 
@@ -173,7 +174,7 @@ const AuctionHouse: React.FC<Props> = ({ user, artworks, onBidUpdate, onSelectAr
                   <div className={`absolute left-0 top-2 w-4 h-4 rounded-full border-4 border-zinc-900 -translate-x-1/2 ${i === (artworks.find(a => a.id === showTimelineId)?.bids?.length || 0) - 1 ? 'bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.5)]' : 'bg-zinc-600'}`}></div>
                   <div>
                     <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Bid Placed • {new Date(bid.timestamp).toLocaleTimeString()}</p>
-                    <p className="text-white font-bold mt-1">${bid.amount.toLocaleString()} by {bid.bidderName}</p>
+                    <p className="text-white font-bold mt-1">{toINRString(bid.amount)} by {bid.bidderName}</p>
                   </div>
                 </div>
               ))}

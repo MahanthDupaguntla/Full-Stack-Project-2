@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { User, Artwork } from '../types';
 import { mockBackend } from '../services/mockBackend';
+import { toINRString } from '../utils/currency';
 
 interface UserProfileProps {
   user: User;
@@ -52,7 +53,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ user, artworks, onUpdateUser 
         </div>
         <div className="flex flex-col items-center md:items-end gap-2">
           <p className="text-[10px] text-zinc-500 font-black uppercase tracking-[0.3em]">Available Liquidity</p>
-          <p className="text-4xl font-serif font-bold text-white">${user.walletBalance.toLocaleString()}</p>
+          <p className="text-4xl font-serif font-bold text-white">{toINRString(user.walletBalance)}</p>
           <button className="mt-4 px-6 py-2 bg-white text-black rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-amber-500 transition-all">Add Funds</button>
         </div>
       </header>
@@ -89,7 +90,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ user, artworks, onUpdateUser 
                 <div className="p-6 flex justify-between items-center">
                   <div>
                     <p className="text-[9px] text-zinc-500 uppercase font-black tracking-widest mb-1">Acquisition Value</p>
-                    <p className="text-white font-bold">${art.price.toLocaleString()}</p>
+                    <p className="text-white font-bold">{toINRString(art.price)}</p>
                   </div>
                   <button className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-[9px] font-black uppercase tracking-widest text-zinc-400 hover:text-white hover:bg-white/10 transition-all">
                     View Certificate
@@ -134,7 +135,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ user, artworks, onUpdateUser 
                 </div>
                 <div className="text-right">
                   <p className={`text-xl font-serif font-bold ${tx.type === 'sale' ? 'text-green-500' : 'text-white'}`}>
-                    {tx.type === 'sale' ? '+' : '-'}${tx.amount.toLocaleString()}
+                    {tx.type === 'sale' ? '+' : '-'}{toINRString(tx.amount)}
                   </p>
                   <p className="text-[9px] text-zinc-600 uppercase font-black tracking-widest mt-1">Transaction ID: {tx.id.slice(0, 8)}</p>
                 </div>
@@ -174,11 +175,11 @@ const UserProfile: React.FC<UserProfileProps> = ({ user, artworks, onUpdateUser 
                 </div>
                 <div>
                   <label className="block text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500 mb-4">Currency</label>
-                  <select className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-white text-xs outline-none focus:border-amber-500">
-                    <option>USD ($)</option>
-                    <option>ETH (Ξ)</option>
-                    <option>EUR (€)</option>
-                  </select>
+                    <select className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-white text-xs outline-none focus:border-amber-500">
+                      <option>INR (₹)</option>
+                      <option>USD ($)</option>
+                      <option>ETH (Ξ)</option>
+                    </select>
                 </div>
               </div>
 

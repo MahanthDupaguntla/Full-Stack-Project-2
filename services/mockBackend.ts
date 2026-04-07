@@ -8,15 +8,15 @@ const ALL_USERS_KEY = 'etheria_all_users';
 const EXHIBITIONS_KEY = 'etheria_exhibitions';
 
 const MOCK_COLLECTORS: User[] = [
-  { id: 'c1', name: 'Alice Johnson', email: 'alice@art.com', role: UserRole.VISITOR, avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Alice', walletBalance: 125000, subscription: 'Elite', joinedDate: Date.now() - 1000 * 60 * 60 * 24 * 30, totalEarned: 15000, transactions: [] },
-  { id: 'c2', name: 'Bob Smith', email: 'bob@art.com', role: UserRole.VISITOR, avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Bob', walletBalance: 45000, subscription: 'Premium', joinedDate: Date.now() - 1000 * 60 * 60 * 24 * 15, totalEarned: 2000, transactions: [] },
-  { id: 'c3', name: 'Charlie Brown', email: 'charlie@art.com', role: UserRole.VISITOR, avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Charlie', walletBalance: 1200, subscription: 'Basic', joinedDate: Date.now() - 1000 * 60 * 60 * 24 * 5, totalEarned: 0, transactions: [] },
+  { id: 'c1', name: 'Ravi Kumar', email: 'ravi.kumar@art.com', role: UserRole.VISITOR, avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Ravi%20Kumar', walletBalance: 125000, subscription: 'Elite', joinedDate: Date.now() - 1000 * 60 * 60 * 24 * 30, totalEarned: 15000, transactions: [] },
+  { id: 'c2', name: 'Priya Sharma', email: 'priya.sharma@art.com', role: UserRole.VISITOR, avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Priya%20Sharma', walletBalance: 45000, subscription: 'Premium', joinedDate: Date.now() - 1000 * 60 * 60 * 24 * 15, totalEarned: 2000, transactions: [] },
+  { id: 'c3', name: 'Amit Patel', email: 'amit.patel@art.com', role: UserRole.VISITOR, avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Amit%20Patel', walletBalance: 1200, subscription: 'Basic', joinedDate: Date.now() - 1000 * 60 * 60 * 24 * 5, totalEarned: 0, transactions: [] },
 ];
 
 const MOCK_ARTISTS: User[] = [
-  { id: 'a1', name: 'Elena Vance', email: 'elena@art.com', role: UserRole.ARTIST, avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Elena', walletBalance: 8500, subscription: 'Artist-Pro', joinedDate: Date.now() - 1000 * 60 * 60 * 24 * 60, totalEarned: 45000, transactions: [] },
-  { id: 'a2', name: 'Marcus Thorne', email: 'marcus@art.com', role: UserRole.ARTIST, avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Marcus', walletBalance: 12000, subscription: 'Artist-Pro', joinedDate: Date.now() - 1000 * 60 * 60 * 24 * 45, totalEarned: 32000, transactions: [] },
-  { id: 'a3', name: 'Sora Kim', email: 'sora@art.com', role: UserRole.ARTIST, avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sora', walletBalance: 25000, subscription: 'Artist-Pro', joinedDate: Date.now() - 1000 * 60 * 60 * 24 * 120, totalEarned: 68000, transactions: [] },
+  { id: 'a1', name: 'Ananya Singh', email: 'ananya.singh@art.com', role: UserRole.ARTIST, avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Ananya%20Singh', walletBalance: 8500, subscription: 'Artist-Pro', joinedDate: Date.now() - 1000 * 60 * 60 * 24 * 60, totalEarned: 45000, transactions: [] },
+  { id: 'a2', name: 'Rohan Mehta', email: 'rohan.mehta@art.com', role: UserRole.ARTIST, avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Rohan%20Mehta', walletBalance: 12000, subscription: 'Artist-Pro', joinedDate: Date.now() - 1000 * 60 * 60 * 24 * 45, totalEarned: 32000, transactions: [] },
+  { id: 'a3', name: 'Sanya Reddy', email: 'sanya.reddy@art.com', role: UserRole.ARTIST, avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sanya%20Reddy', walletBalance: 25000, subscription: 'Artist-Pro', joinedDate: Date.now() - 1000 * 60 * 60 * 24 * 120, totalEarned: 68000, transactions: [] },
 ];
 
 export const mockBackend = {
