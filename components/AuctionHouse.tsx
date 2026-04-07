@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Artwork, User, Bid } from '../types';
-import { mockBackend } from '../services/mockBackend';
+import { hybridBackend } from '../services/apiService';
 import { toINRString } from '../utils/currency';
 
 interface Props {
@@ -36,9 +36,9 @@ const AuctionHouse: React.FC<Props> = ({ user, artworks, onBidUpdate, onSelectAr
     return () => clearInterval(interval);
   }, [auctions]);
 
-  const handleQuickBid = (artworkId: string, currentBid: number) => {
+  const handleQuickBid = async (artworkId: string, currentBid: number) => {
     const bidAmount = (currentBid || 0) + 500;
-    const success = mockBackend.placeBid(artworkId, user, bidAmount);
+    const success = await hybridBackend.placeBid(artworkId, user, bidAmount);
     if (success) onBidUpdate();
   };
 

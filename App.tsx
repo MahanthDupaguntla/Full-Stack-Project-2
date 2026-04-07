@@ -13,6 +13,7 @@ import {
   VisitorDashboard,
 } from './components/Dashboards';
 import { mockBackend } from './services/mockBackend';
+import { hybridBackend } from './services/apiService';
 import { toINRString } from './utils/currency';
 import { INITIAL_EXHIBITIONS } from './constants';
 import { getGalleryGuideResponse } from './services/geminiService';
@@ -163,31 +164,47 @@ const App: React.FC = () => {
   const [selectedArtwork, setSelectedArtwork] = useState<Artwork | null>(null);
   const [isTourActive, setIsTourActive] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
+
+  // Init hybrid backend on mount
+  useEffect(() => {
+    hybridBackend.init().then(online => {
+      hybridBackend.fetchCurrentUser().then(user => {
+        setCurrentUser(user);
+        setIsAuthLoading(false);
+      });
+      if (online) {
+        hybridBackend.getArtworks().then(setArtworks);
+      }
+    });
+  }, []);
   const [activeCategory, setActiveCategory] = useState('All');
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
 
-  const refreshData = () => setArtworks(mockBackend.getArtworks());
+  const refreshData = async () => {
+    const arts = await hybridBackend.getArtworks();
+    setArtworks(arts);
+  };
 
   const handleLogout = () => {
-    mockBackend.logout();
+    hybridBackend.logout();
     setCurrentUser(null);
     setActiveView('gallery');
   };
 
-  const handleArtworkAction = (art: Artwork) => {
+  const handleArtworkAction = async (art: Artwork) => {
     if (!currentUser) { alert('Please sign in to interact with the gallery.'); return; }
     if (art.isAuction) {
       setActiveView('auctions');
       setSelectedArtwork(null);
     } else {
-      const success = mockBackend.purchaseArtwork(art.id, currentUser);
+      const success = await hybridBackend.purchaseArtwork(art.id, currentUser);
       if (success) {
         alert(`Congratulations! You now own "${art.title}". 🎨`);
-        refreshData();
+        await refreshData();
         setCurrentUser(mockBackend.getCurrentUser());
         setSelectedArtwork(null);
-      } else {
-        alert('Insufficient funds or artwork no longer available.');
       }
     }
   };
@@ -209,7 +226,7 @@ const App: React.FC = () => {
         case UserRole.ARTIST: return <ArtistDashboard artworks={artworks} />;
         case UserRole.CURATOR: return <CuratorDashboard />;
         case UserRole.ADMIN: return <AdminDashboard />;
-        default: return <VisitorDashboard />;
+        default: return <VisitorDashboard artworks={artworks} />;
       }
     }
     if (activeView === 'profile') {
@@ -542,31 +559,43 @@ const App: React.FC = () => {
       </div>
     );
   };
+  if (isAuthLoading) {
+    return (
+      <div className="min-h-screen bg-[#050505] flex items-center justify-center">
+        <div className="w-12 h-12 border-2 border-amber-500/20 border-t-amber-500 rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen">
-      {!currentUser && <AuthFlow onLogin={setCurrentUser} />}
-      <Navbar
-        user={currentUser}
-        activeView={activeView}
-        onViewChange={setActiveView}
-        onLogout={handleLogout}
-        onSearch={setSearchQuery}
-        searchQuery={searchQuery}
-      />
-      <main className="pt-44 max-w-7xl mx-auto px-6 pb-24">
-        {renderContent()}
-      </main>
-      {selectedArtwork && (
-        <ArtworkDetails
-          artwork={selectedArtwork}
-          onClose={() => setSelectedArtwork(null)}
-          onAction={handleArtworkAction}
-          user={currentUser}
-        />
+      {!currentUser ? (
+        <AuthFlow onLogin={setCurrentUser} />
+      ) : (
+        <>
+          <Navbar
+            user={currentUser}
+            activeView={activeView}
+            onViewChange={setActiveView}
+            onLogout={handleLogout}
+            onSearch={setSearchQuery}
+            searchQuery={searchQuery}
+          />
+          <main className="pt-44 max-w-7xl mx-auto px-6 pb-24">
+            {renderContent()}
+          </main>
+          {selectedArtwork && (
+            <ArtworkDetails
+              artwork={selectedArtwork}
+              onClose={() => setSelectedArtwork(null)}
+              onAction={handleArtworkAction}
+              user={currentUser}
+            />
+          )}
+          {isTourActive && <VirtualTour artworks={artworks} onClose={() => setIsTourActive(false)} />}
+          <AiAssistant />
+        </>
       )}
-      {isTourActive && <VirtualTour artworks={artworks} onClose={() => setIsTourActive(false)} />}
-      <AiAssistant />
     </div>
   );
 };

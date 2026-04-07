@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { User, Artwork } from '../types';
-import { mockBackend } from '../services/mockBackend';
+import { hybridBackend } from '../services/apiService';
 import { toINRString } from '../utils/currency';
 
 interface UserProfileProps {
@@ -19,9 +19,9 @@ const UserProfile: React.FC<UserProfileProps> = ({ user, artworks, onUpdateUser 
   const handleSavePreferences = () => {
     setIsSaving(true);
     // Simulate API call
-    setTimeout(() => {
+    setTimeout(async () => {
       const updatedUser = { ...user, bio };
-      mockBackend.updateUser(updatedUser);
+      await hybridBackend.updateUser(updatedUser);
       onUpdateUser(updatedUser);
       setIsSaving(false);
       alert("Preferences updated successfully.");

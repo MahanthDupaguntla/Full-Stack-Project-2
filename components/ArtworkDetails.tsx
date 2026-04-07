@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Artwork, User } from '../types';
 import { getCulturalInsight } from '../services/geminiService';
-import { mockBackend } from '../services/mockBackend';
+import { hybridBackend } from '../services/apiService';
 import { toINRString } from '../utils/currency';
 
 
@@ -36,8 +36,8 @@ const ArtworkDetails: React.FC<Props> = ({ artwork, onClose, onAction, user }) =
     fetchInfo();
   }, [artwork]);
 
-  const handleSaveInsight = () => {
-    mockBackend.updateArtwork({ ...artwork, curatorInsight: editedInsight });
+  const handleSaveInsight = async () => {
+    await hybridBackend.updateArtwork({ ...artwork, curatorInsight: editedInsight });
     setInsight(editedInsight);
     setIsEditing(false);
   };

@@ -1,0 +1,67 @@
+package com.artforge.controller;
+
+import com.artforge.dto.ArtworkRequest;
+import com.artforge.dto.BidRequest;
+import com.artforge.model.Artwork;
+import com.artforge.model.Bid;
+import com.artforge.service.ArtworkService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Map;
+
+@RestController
+@RequestMapping("/api/artworks")
+@RequiredArgsConstructor
+public class ArtworkController {
+
+    private final ArtworkService artworkService;
+
+    // GET /api/artworks — all listed artworks
+    @GetMapping
+    public ResponseEntity<List<Artwork>> getAll() {
+        return ResponseEntity.ok(artworkService.getAllListed());
+    }
+
+    // GET /api/artworks/{id}
+    @GetMapping("/{id}")
+    public ResponseEntity<Artwork> getById(@PathVariable String id) {
+        return ResponseEntity.ok(artworkService.getById(id));
+    }
+
+    // GET /api/artworks/search?q=...
+    @GetMapping("/search")
+    public ResponseEntity<List<Artwork>> search(@RequestParam String q) {
+        return ResponseEntity.ok(artworkService.search(q));
+    }
+
+    // POST /api/artworks — create (Artist/Admin)
+    @PreAuthorize("hasAnyRole('ARTIST', 'ADMIN')")
+    @PostMapping
+    public ResponseEntity<Artwork> create(@RequestBody ArtworkRequest req,
+                                          @AuthenticationPrincipal UserDetails user) {
+        return ResponseEntity.ok(artworkService.create(req, user.getUsername()));
+    }
+
+    // POST /api/artworks/{id}/purchase
+    @PostMapping("/{id}/purchase")
+    public ResponseEntity<Map<String, String>> purchase(@PathVariable String id,
+                                                        @AuthenticationPrincipal UserDetails user) {
+        artworkService.purchase(id, user.getUsername());
+        return ResponseEntity.ok(Map.of("message", "Artwork purchased successfully!"));
+    }
+
+    // POST /api/artworks/{id}/bid
+    @PostMapping("/{id}/bid")
+    public ResponseEntity<Bid> bid(@PathVariable String id,
+                                   @Valid @RequestBody BidRequest req,
+                                   @AuthenticationPrincipal UserDetails user) {
+        return ResponseEntity.ok(artworkService.placeBid(id, req.getAmount(), user.getUsername()));
+    }
+}

@@ -1,8 +1,8 @@
 
 import React, { useState, useRef } from 'react';
-import { UserRole, Artwork, User, Transaction } from '../types';
+import { UserRole, Artwork, User, Transaction, Exhibition } from '../types';
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
-import { mockBackend } from '../services/mockBackend';
+import { hybridBackend } from '../services/apiService';
 import { generateBrandStory } from '../services/geminiService';
 
 const MOCK_FINANCIALS = [
@@ -19,7 +19,7 @@ const StatCard = ({ label, value, colorClass = "text-white" }: { label: string, 
   </div>
 );
 
-const TransactionItem = ({ tx }: { tx: Transaction }) => (
+const TransactionItem: React.FC<{ tx: Transaction }> = ({ tx }) => (
   <div className="flex items-center justify-between p-6 bg-white/5 rounded-2xl border border-white/5 hover:bg-white/10 transition-colors">
     <div className="flex items-center gap-4">
       <div className={`p-3 rounded-full ${tx.type === 'sale' ? 'bg-green-500/10 text-green-500' : 'bg-white/5 text-zinc-400'}`}>
@@ -46,7 +46,7 @@ export const ArtistDashboard: React.FC<{ artworks: Artwork[] }> = ({ artworks })
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  const user = mockBackend.getCurrentUser()!;
+  const user = hybridBackend.getCurrentUser()!;
   const myArtworks = artworks.filter(a => a.artist === user.name);
 
   const startCamera = async () => {
@@ -75,10 +75,10 @@ export const ArtistDashboard: React.FC<{ artworks: Artwork[] }> = ({ artworks })
     }
   };
 
-  const handleUpload = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleUpload = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    mockBackend.uploadArtwork({
+    await hybridBackend.uploadArtwork({
       title: formData.get('title') as string,
       description: formData.get('description') as string,
       price: Number(formData.get('price')),
@@ -181,16 +181,15 @@ export const ArtistDashboard: React.FC<{ artworks: Artwork[] }> = ({ artworks })
   );
 };
 
-export const VisitorDashboard: React.FC = () => {
-  const user = mockBackend.getCurrentUser()!;
-  const artworks = mockBackend.getArtworks();
+export const VisitorDashboard: React.FC<{ artworks: Artwork[] }> = ({ artworks }) => {
+  const user = hybridBackend.getCurrentUser()!;
   
   const myCollection = artworks.filter(a => a.currentOwnerName === user.name);
 
-  const handleList = (id: string) => {
+  const handleList = async (id: string) => {
     const price = prompt("Listing Price ($):", "15000");
     if (price) {
-      mockBackend.listArtwork(id, false, Number(price));
+      await hybridBackend.listArtwork(id, false, Number(price));
       window.location.reload();
     }
   };
@@ -250,14 +249,18 @@ export const VisitorDashboard: React.FC = () => {
 };
 
 export const AdminDashboard: React.FC = () => {
-  const [users, setUsers] = useState<User[]>(() => mockBackend.getAllUsers());
+  const [users, setUsers] = useState<User[]>([]);
+
+  React.useEffect(() => {
+    hybridBackend.getAllUsers().then(setUsers);
+  }, []);
   const [activeTab, setActiveTab] = useState<'users' | 'settings'>('users');
   const [brandStory, setBrandStory] = useState<string>('');
   const [isForging, setIsForging] = useState(false);
 
-  const handleRoleChange = (userId: string, newRole: UserRole) => {
-    mockBackend.updateUserRole(userId, newRole);
-    setUsers(mockBackend.getAllUsers());
+  const handleRoleChange = async (userId: string, newRole: UserRole) => {
+    await hybridBackend.updateUserRole(userId, newRole);
+    hybridBackend.getAllUsers().then(setUsers);
   };
 
   const handleForgeBrand = async () => {
@@ -418,12 +421,16 @@ export const AdminDashboard: React.FC = () => {
 };
 
 export const CuratorDashboard: React.FC = () => {
-  const [exhibitions, setExhibitions] = useState<Exhibition[]>(() => mockBackend.getExhibitions());
+  const [exhibitions, setExhibitions] = useState<Exhibition[]>([]);
+
+  React.useEffect(() => {
+    hybridBackend.getExhibitions().then(setExhibitions);
+  }, []);
   const [showCreate, setShowCreate] = useState(false);
 
-  const handleStatusChange = (ex: Exhibition, status: Exhibition['status']) => {
-    mockBackend.updateExhibition({ ...ex, status });
-    setExhibitions(mockBackend.getExhibitions());
+  const handleStatusChange = async (ex: Exhibition, status: Exhibition['status']) => {
+    await hybridBackend.updateExhibition({ ...ex, status });
+    hybridBackend.getExhibitions().then(setExhibitions);
   };
 
   return (
@@ -491,14 +498,14 @@ export const CuratorDashboard: React.FC = () => {
              <form onSubmit={(e) => {
                e.preventDefault();
                const fd = new FormData(e.currentTarget);
-               mockBackend.createExhibition({
+               hybridBackend.createExhibition({
                  title: fd.get('title') as string,
                  theme: fd.get('theme') as string,
                  description: fd.get('description') as string,
                  status: 'upcoming'
                });
                setShowCreate(false);
-               setExhibitions(mockBackend.getExhibitions());
+               hybridBackend.getExhibitions().then(setExhibitions);
              }} className="space-y-6">
                <div><label className="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-2">Exhibition Title</label><input name="title" required className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-white outline-none focus:border-amber-500" /></div>
                <div><label className="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-2">Conceptual Theme</label><input name="theme" required className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-white outline-none focus:border-amber-500" /></div>
