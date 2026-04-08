@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { UserRole, Artwork, User } from './types';
 import Navbar from './components/Navbar';
@@ -45,9 +46,9 @@ const AiAssistant: React.FC = () => {
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-[200]">
+    <div className="fixed bottom-[max(env(safe-area-inset-bottom),20px)] right-4 sm:bottom-6 sm:right-6 z-[200]">
       {isOpen ? (
-        <div className="glass w-[340px] h-[520px] rounded-3xl overflow-hidden flex flex-col shadow-[0_40px_80px_rgba(0,0,0,0.8)] border border-white/10 animate-fadeIn">
+        <div className="glass w-[calc(100vw-24px)] sm:w-[340px] h-[520px] max-h-[85vh] rounded-3xl overflow-hidden flex flex-col shadow-[0_40px_80px_rgba(0,0,0,0.8)] border border-white/10 animate-fadeInUp fixed bottom-3 right-3 sm:relative sm:bottom-0 sm:right-0">
           {/* Header */}
           <div className="flex items-center justify-between px-5 py-4 border-b border-white/8 bg-gradient-to-r from-amber-500/10 to-transparent">
             <div className="flex items-center gap-3">
@@ -117,9 +118,9 @@ const AiAssistant: React.FC = () => {
       ) : (
         <button
           onClick={() => setIsOpen(true)}
-          className="group relative bg-gradient-to-br from-amber-400 to-amber-600 text-black p-4 rounded-2xl shadow-[0_20px_40px_rgba(245,158,11,0.3)] hover:shadow-[0_25px_50px_rgba(245,158,11,0.4)] hover:scale-105 hover:-translate-y-1 transition-all duration-500 btn-shine animate-pulse-glow"
+          className="group relative bg-gradient-to-br from-amber-400 to-amber-600 text-black p-4 lg:p-5 rounded-2xl shadow-[0_20px_40px_rgba(245,158,11,0.3)] hover:shadow-[0_25px_50px_rgba(245,158,11,0.4)] hover:scale-105 transition-all duration-500 btn-shine animate-pulse-glow"
         >
-          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+          <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="currentColor" viewBox="0 0 24 24">
             <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/>
           </svg>
           <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-black animate-pulse" />
@@ -142,12 +143,12 @@ const StatsTicker: React.FC<{ artworks: Artwork[] }> = ({ artworks }) => {
   ];
   const doubled = [...items, ...items];
   return (
-    <div className="w-full overflow-hidden bg-amber-500/8 border-t border-b border-amber-500/10 py-2.5">
+    <div className="w-full overflow-hidden bg-amber-500/8 border-t border-b border-amber-500/10 py-2 sm:py-2.5">
       <div className="ticker-wrap">
         <div className="ticker-inner animate-ticker">
           {doubled.map((item, i) => (
-            <span key={i} className="text-[10px] font-semibold text-amber-500/70 uppercase tracking-widest px-8 flex-shrink-0">
-              {item} <span className="text-amber-500/30 mx-4">◆</span>
+            <span key={i} className="text-[9px] sm:text-[10px] font-semibold text-amber-500/70 uppercase tracking-widest px-6 sm:px-8 flex-shrink-0">
+              {item} <span className="text-amber-500/30 mx-3 sm:mx-4">◆</span>
             </span>
           ))}
         </div>
@@ -158,8 +159,8 @@ const StatsTicker: React.FC<{ artworks: Artwork[] }> = ({ artworks }) => {
 
 // ─── Main App ─────────────────────────────────────────────────────────────────
 const App: React.FC = () => {
-  const [currentUser, setCurrentUser] = useState<User | null>(mockBackend.getCurrentUser());
-  const [activeView, setActiveView] = useState<'gallery' | 'exhibitions' | 'auctions' | 'dashboard' | 'sold' | 'timeline' | 'profile'>('gallery');
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [activeView, setActiveView] = useState<'gallery' | 'exhibitions' | 'auctions' | 'dashboard' | 'sold' | 'timeline' | 'profile' | 'login'>('gallery');
   const [artworks, setArtworks] = useState<Artwork[]>(() => mockBackend.getArtworks());
   const [selectedArtwork, setSelectedArtwork] = useState<Artwork | null>(null);
   const [isTourActive, setIsTourActive] = useState(false);
@@ -220,8 +221,34 @@ const App: React.FC = () => {
   const categories = ['All', ...Array.from(new Set(artworks.map(a => a.category)))];
 
   const renderContent = () => {
+    if (activeView === 'login') {
+      return (
+        <div className="animate-fadeIn">
+          <AuthFlow onLogin={(u) => { setCurrentUser(u); setActiveView('gallery'); }} />
+          <div className="fixed top-24 left-4 sm:top-28 sm:left-8 z-[200]">
+            <button onClick={() => setActiveView('gallery')} className="flex items-center gap-2 text-zinc-500 hover:text-white transition-all bg-black/50 backdrop-blur-md px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl border border-white/10 uppercase text-[9px] sm:text-[10px] font-black tracking-widest">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7" /></svg>
+              View Gallery
+            </button>
+          </div>
+        </div>
+      );
+    }
     if (activeView === 'dashboard') {
-      if (!currentUser) return null;
+      if (!currentUser) {
+        return (
+          <div className="flex flex-col items-center justify-center py-20 sm:py-40 text-center animate-fadeIn px-4">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-amber-500/10 rounded-full flex items-center justify-center mb-6 sm:mb-8 border border-amber-500/20">
+              <svg className="w-8 h-8 sm:w-10 sm:h-10 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-serif text-white mb-4 italic">Protected Sanctuary</h2>
+            <p className="text-zinc-500 max-w-sm mb-10 leading-relaxed font-light text-sm sm:text-base">Access to your private dashboard requires authentication. Join the collective to manage your collection.</p>
+            <button onClick={() => setActiveView('login')} className="bg-white text-black px-10 sm:px-12 py-3.5 sm:py-4 rounded-xl sm:rounded-2xl font-bold hover:bg-amber-500 transition-all shadow-xl text-sm">
+              Authenticate Now →
+            </button>
+          </div>
+        );
+      }
       switch (currentUser.role) {
         case UserRole.ARTIST: return <ArtistDashboard artworks={artworks} />;
         case UserRole.CURATOR: return <CuratorDashboard />;
@@ -230,10 +257,24 @@ const App: React.FC = () => {
       }
     }
     if (activeView === 'profile') {
-      if (!currentUser) return null;
+      if (!currentUser) { setActiveView('login'); return null; }
       return <UserProfile user={currentUser} artworks={artworks} onUpdateUser={setCurrentUser} />;
     }
     if (activeView === 'auctions') {
+      if (!currentUser) {
+        return (
+          <div className="flex flex-col items-center justify-center py-20 sm:py-40 text-center animate-fadeIn px-4">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-red-500/10 rounded-full flex items-center justify-center mb-6 sm:mb-8 border border-red-500/20">
+              <svg className="w-8 h-8 sm:w-10 sm:h-10 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-serif text-white mb-4 italic">Exclusive Auctions</h2>
+            <p className="text-zinc-500 max-w-sm mb-10 leading-relaxed font-light text-sm sm:text-base">Live bidding is reserved for verified collectors. Sign in to participate in the global art market.</p>
+            <button onClick={() => setActiveView('login')} className="bg-red-500 text-white px-10 sm:px-12 py-3.5 sm:py-4 rounded-xl sm:rounded-2xl font-bold hover:bg-white hover:text-black transition-all shadow-xl text-sm">
+              Sign In to Bid →
+            </button>
+          </div>
+        );
+      }
       return (
         <AuctionHouse
           user={currentUser!}
@@ -241,40 +282,45 @@ const App: React.FC = () => {
           onBidUpdate={refreshData}
           onSelectArtwork={setSelectedArtwork}
           onBackToGallery={() => setActiveView('gallery')}
+          searchQuery={searchQuery}
         />
       );
     }
     if (activeView === 'exhibitions') {
       return (
-        <div className="space-y-20 animate-fadeIn py-8 px-2">
+        <div className="space-y-12 sm:space-y-20 animate-fadeIn py-4 sm:py-8 px-2">
           <header className="max-w-3xl">
-            <span className="tag-pill mb-5 inline-block">Current Narratives</span>
-            <h2 className="text-6xl font-serif font-bold text-white mb-5 italic leading-tight">
+            <span className="tag-pill mb-4 sm:mb-5 inline-block">Current Narratives</span>
+            <h2 className="text-4xl sm:text-6xl font-serif font-bold text-white mb-5 italic leading-tight">
               Curated <span className="text-gold">Exhibitions</span>
             </h2>
-            <p className="text-zinc-500 text-base font-light leading-relaxed max-w-xl">
+            <p className="text-zinc-500 text-sm sm:text-base font-light leading-relaxed max-w-xl">
               Discover thematic landscapes and conceptual explorations curated by our global network of art historians and visionaries.
             </p>
           </header>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {INITIAL_EXHIBITIONS.map((ex, idx) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+            {INITIAL_EXHIBITIONS.filter(ex => 
+               !searchQuery || 
+               ex.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+               ex.description.toLowerCase().includes(searchQuery.toLowerCase())
+            ).map((ex, idx) => (
               <div key={ex.id} className="group cursor-pointer animate-fadeIn" style={{ animationDelay: `${idx * 0.1}s` }}>
-                <div className="relative h-[420px] rounded-[2rem] overflow-hidden border border-white/5 transition-all duration-700 hover:border-amber-500/30 shadow-[0_20px_40px_rgba(0,0,0,0.5)]">
+                <div className="relative h-[360px] sm:h-[420px] rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden border border-white/5 transition-all duration-700 hover:border-amber-500/30 shadow-[0_20px_40px_rgba(0,0,0,0.5)]">
                   <img
                     src={ex.bannerUrl}
                     className="w-full h-full object-cover grayscale transition-all duration-[2s] group-hover:scale-110 group-hover:grayscale-0"
                     alt={ex.title}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
-                  <div className="absolute top-5 left-5">
-                    <span className={`text-[8px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full border ${ex.status === 'active' ? 'bg-green-500/15 border-green-500/30 text-green-400' : 'bg-amber-500/15 border-amber-500/30 text-amber-400'}`}>
+                  <div className="absolute top-4 sm:top-5 left-4 sm:left-5">
+                    <span className={`text-[7px] sm:text-[8px] font-black uppercase tracking-widest px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full border ${ex.status === 'active' ? 'bg-green-500/15 border-green-500/30 text-green-400' : 'bg-amber-500/15 border-amber-500/30 text-amber-400'}`}>
                       {ex.status}
                     </span>
                   </div>
-                  <div className="absolute bottom-0 left-0 right-0 p-8">
-                    <h3 className="text-3xl font-serif text-white mb-3 font-bold italic leading-tight group-hover:text-amber-200 transition-colors">{ex.title}</h3>
-                    <p className="text-zinc-400 text-xs mb-5 leading-relaxed opacity-0 group-hover:opacity-100 transition-opacity duration-500">{ex.description}</p>
-                    <button className="btn-shine bg-white/10 hover:bg-amber-500 text-white hover:text-black border border-white/10 hover:border-amber-500 px-6 py-2.5 rounded-xl text-[10px] font-black transition-all uppercase tracking-widest">
+                  <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-8">
+                    <h3 className="text-2xl sm:text-3xl font-serif text-white mb-2 sm:mb-3 font-bold italic leading-tight group-hover:text-amber-200 transition-colors uppercase tracking-tight">{ex.title}</h3>
+                    <p className="text-zinc-400 text-[10px] sm:text-xs mb-4 sm:mb-5 leading-relaxed sm:opacity-0 group-hover:opacity-100 transition-opacity duration-500">{ex.description}</p>
+                    <button className="btn-shine bg-white/10 hover:bg-amber-500 text-white hover:text-black border border-white/10 hover:border-amber-500 px-5 sm:px-6 py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-[9px] sm:text-[10px] font-black transition-all uppercase tracking-widest">
                       Enter Exhibition →
                     </button>
                   </div>
@@ -287,13 +333,13 @@ const App: React.FC = () => {
     }
     if (activeView === 'timeline') {
       return (
-        <div className="animate-fadeIn py-8 max-w-3xl mx-auto px-2">
-          <header className="mb-16">
-            <span className="tag-pill mb-5 inline-block">Platform Ledger</span>
-            <h2 className="text-5xl font-serif font-bold text-white mb-4 italic">Event <span className="text-gold">Timeline</span></h2>
-            <p className="text-zinc-500 text-sm font-light">Real-time chronicle of acquisitions, bid placements, and gallery expansions.</p>
+        <div className="animate-fadeIn py-4 sm:py-8 max-w-3xl mx-auto px-2 sm:px-4">
+          <header className="mb-10 sm:mb-16">
+            <span className="tag-pill mb-4 sm:mb-5 inline-block">Platform Ledger</span>
+            <h2 className="text-4xl sm:text-5xl font-serif font-bold text-white mb-4 italic">Event <span className="text-gold">Timeline</span></h2>
+            <p className="text-zinc-500 text-xs sm:text-sm font-light leading-relaxed">Real-time chronicle of acquisitions, bid placements, and gallery expansions.</p>
           </header>
-          <div className="space-y-6 relative">
+          <div className="space-y-6 sm:space-y-8 relative">
             <div className="absolute left-[19px] top-0 bottom-0 w-px bg-gradient-to-b from-amber-500/30 via-amber-500/10 to-transparent" />
             {[
               { type: 'Acquisition', icon: '🛒', user: 'Julian Reed', item: 'Echoes of Eternity', price: toINRString(4500), time: '2 hours ago', color: 'text-green-400 bg-green-400/10 border-green-400/20' },
@@ -302,21 +348,21 @@ const App: React.FC = () => {
               { type: 'Asset Listed', icon: '✨', user: 'Ananya Singh', item: 'Kinetic Solitude', price: toINRString(5600), time: '2 days ago', color: 'text-purple-400 bg-purple-400/10 border-purple-400/20' },
               { type: 'Bid Placed', icon: '⚡', user: 'Marcus Thorne', item: 'Celestial Pulse', price: toINRString(6200), time: '3 days ago', color: 'text-yellow-400 bg-yellow-400/10 border-yellow-400/20' },
             ].map((event, i) => (
-              <div key={i} className="flex gap-6 items-start relative pl-12 group animate-fadeIn" style={{ animationDelay: `${i * 0.08}s` }}>
-                <div className="absolute left-0 top-1 w-10 h-10 rounded-xl bg-zinc-900 border border-white/8 flex items-center justify-center z-10 group-hover:border-amber-500/40 transition-all shadow-lg">
+              <div key={i} className="flex gap-4 sm:gap-6 items-start relative pl-10 sm:pl-12 group animate-fadeIn" style={{ animationDelay: `${i * 0.08}s` }}>
+                <div className="absolute left-0 top-1 w-9 h-9 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-zinc-900 border border-white/8 flex items-center justify-center z-10 group-hover:border-amber-500/40 transition-all shadow-lg">
                   <span className="text-sm">{event.icon}</span>
                 </div>
-                <div className="flex-1 glass-light p-5 rounded-2xl group-hover:border-white/12 transition-all">
-                  <div className="flex justify-between items-start mb-2">
-                    <span className={`text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full border ${event.color}`}>{event.type}</span>
-                    <span className="text-[9px] text-zinc-600 font-semibold">{event.time}</span>
+                <div className="flex-1 glass-light p-4 sm:p-5 rounded-xl sm:rounded-2xl group-hover:border-white/12 transition-all">
+                  <div className="flex justify-between items-start mb-2 flex-wrap gap-2">
+                    <span className={`text-[8px] sm:text-[9px] font-black uppercase tracking-widest px-2 py-0.5 sm:py-1 rounded-full border ${event.color}`}>{event.type}</span>
+                    <span className="text-[8px] sm:text-[9px] text-zinc-600 font-semibold">{event.time}</span>
                   </div>
-                  <p className="text-sm font-semibold text-white mt-3">
+                  <p className="text-xs sm:text-sm font-semibold text-white mt-3 leading-relaxed">
                     <span className="text-amber-400">{event.user}</span>
                     <span className="font-normal text-zinc-400"> interacted with </span>
                     <span className="italic">"{event.item}"</span>
                   </p>
-                  <p className="text-xs text-zinc-500 mt-1">Value: <span className="text-white font-bold">{event.price}</span></p>
+                  <p className="text-[10px] sm:text-xs text-zinc-500 mt-1">Value: <span className="text-white font-bold">{event.price}</span></p>
                 </div>
               </div>
             ))}
@@ -327,10 +373,10 @@ const App: React.FC = () => {
 
     // ─── GALLERY VIEW ──────────────────────────────────────────────────────────
     return (
-      <div className="space-y-28 animate-fadeIn">
+      <div className="space-y-16 sm:space-y-28 animate-fadeIn">
 
         {/* Hero Section */}
-        <section className="relative min-h-[75vh] flex flex-col justify-end px-8 pb-16 overflow-hidden rounded-[3rem]">
+        <section className="relative min-h-[60vh] sm:min-h-[75vh] flex flex-col justify-end px-4 sm:px-8 pb-10 sm:pb-16 overflow-hidden rounded-[2rem] sm:rounded-[3rem]">
           {/* Background */}
           <div className="absolute inset-0 z-0">
             <img
@@ -342,49 +388,49 @@ const App: React.FC = () => {
           </div>
 
           {/* Floating orbs */}
-          <div className="absolute top-16 right-20 w-80 h-80 rounded-full bg-amber-500/5 blur-3xl animate-orb pointer-events-none" />
-          <div className="absolute bottom-20 left-10 w-60 h-60 rounded-full bg-indigo-500/5 blur-3xl animate-orb pointer-events-none" style={{ animationDelay: '8s' }} />
+          <div className="absolute top-10 right-10 w-40 h-40 sm:w-80 sm:h-80 rounded-full bg-amber-500/5 blur-3xl animate-orb pointer-events-none" />
+          <div className="absolute bottom-20 left-4 w-32 h-32 sm:w-60 sm:h-60 rounded-full bg-indigo-500/5 blur-3xl animate-orb pointer-events-none" style={{ animationDelay: '8s' }} />
 
           {/* Badge top */}
-          <div className="absolute top-10 left-8 z-10">
-            <div className="flex items-center gap-2 glass-light px-4 py-2 rounded-full animate-fadeIn">
+          <div className="absolute top-6 sm:top-10 left-4 sm:left-8 z-10">
+            <div className="flex items-center gap-2 glass-light px-3 sm:px-4 py-1.5 sm:py-2 rounded-full animate-fadeIn shadow-lg">
               <div className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />
-              <span className="text-[9px] font-black uppercase tracking-widest text-white/70">Gallery Open · Live Auctions Active</span>
+              <span className="text-[8px] sm:text-[9px] font-black uppercase tracking-widest text-white/70">Gallery Open · Live Bidding</span>
             </div>
           </div>
 
           {/* Content */}
           <div className="relative z-10 max-w-4xl">
-            <div className="flex items-center gap-3 mb-6 animate-fadeIn">
-              <div className="h-px w-10 bg-amber-500/60" />
-              <span className="text-amber-500 text-[10px] font-black uppercase tracking-[0.5em]">Premium Art Sanctuary</span>
+            <div className="flex items-center gap-3 mb-4 sm:mb-6 animate-fadeIn">
+              <div className="h-px w-6 sm:w-10 bg-amber-500/60" />
+              <span className="text-amber-500 text-[8px] sm:text-[10px] font-black uppercase tracking-[0.4em] sm:tracking-[0.5em]">Premium Art Sanctuary</span>
             </div>
-            <h1 className="text-7xl md:text-9xl font-serif font-bold leading-none mb-6 animate-fadeIn delay-100">
+            <h1 className="text-4xl sm:text-7xl md:text-9xl font-serif font-bold leading-[1.1] sm:leading-none mb-6 animate-fadeIn delay-100 italic">
               <span className="text-white">Art</span><span className="text-gold">Forge</span>
             </h1>
-            <p className="text-zinc-300 text-lg md:text-xl mb-10 max-w-lg font-light leading-relaxed animate-fadeIn delay-200">
+            <p className="text-zinc-300 text-sm sm:text-lg md:text-xl mb-8 sm:mb-10 max-w-sm sm:max-w-lg font-light leading-relaxed animate-fadeIn delay-200">
               Transcending the physical. Preserving the eternal. The world's most evocative digital art holding.
             </p>
-            <div className="flex flex-wrap gap-4 animate-fadeIn delay-300">
+            <div className="flex flex-wrap gap-3 sm:gap-4 animate-fadeIn delay-300">
               <button
                 onClick={() => setIsTourActive(true)}
-                className="btn-shine bg-white text-black px-10 py-4 rounded-2xl font-bold text-sm hover:bg-amber-400 transition-all shadow-[0_10px_30px_rgba(255,255,255,0.1)] flex items-center gap-3"
+                className="btn-shine bg-white text-black px-6 sm:px-10 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-bold text-xs sm:text-sm hover:bg-amber-400 transition-all shadow-[0_10px_30px_rgba(255,255,255,0.1)] flex items-center gap-2 sm:gap-3"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 Virtual Tour
               </button>
               <button
                 onClick={() => setActiveView('auctions')}
-                className="live-badge px-6 py-4 rounded-2xl text-[10px]"
+                className="live-badge px-4 sm:px-6 py-3 sm:py-4 rounded-xl sm:rounded-2xl text-[8px] sm:text-[10px] flex items-center gap-2"
               >
-                <div className="w-2 h-2 bg-red-400 rounded-full animate-pulse" />
+                <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-red-400 rounded-full animate-pulse" />
                 Live Auctions
               </button>
             </div>
           </div>
 
           {/* Stats strip */}
-          <div className="absolute bottom-8 right-8 z-10 flex gap-6 animate-fadeIn delay-500">
+          <div className="hidden sm:flex absolute bottom-8 right-8 z-10 gap-6 animate-fadeIn delay-500">
             {[
               { label: 'Artists', value: '120+' },
               { label: 'Artworks', value: '500+' },
@@ -404,27 +450,27 @@ const App: React.FC = () => {
         {/* Gallery Section */}
         <section>
           {/* Section Header */}
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-6 px-1">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 sm:mb-12 gap-4 sm:gap-6 px-1">
             <div className="animate-fadeIn">
-              <span className="tag-pill mb-4 inline-block">Archive Directory</span>
-              <h2 className="text-5xl font-serif text-white italic font-bold">
+              <span className="tag-pill mb-3 sm:mb-4 inline-block">Archive Directory</span>
+              <h2 className="text-4xl sm:text-5xl font-serif text-white italic font-bold">
                 The <span className="text-gold">Portfolio</span>
               </h2>
             </div>
-            <div className="flex items-center gap-3 text-xs text-zinc-500 font-semibold animate-fadeIn delay-200">
+            <div className="flex items-center gap-2 sm:gap-3 text-[10px] sm:text-xs text-zinc-500 font-semibold animate-fadeIn delay-200">
               <span>Showing</span>
-              <span className="text-white bg-amber-500/10 border border-amber-500/20 px-3 py-1 rounded-lg font-bold">{filteredArtworks.length}</span>
+              <span className="text-white bg-amber-500/10 border border-amber-500/20 px-2 sm:px-3 py-0.5 sm:py-1 rounded-lg font-bold">{filteredArtworks.length}</span>
               <span>available works</span>
             </div>
           </div>
 
           {/* Category Filter */}
-          <div className="flex flex-wrap gap-2.5 mb-12 animate-fadeIn">
+          <div className="flex flex-wrap gap-2 mb-8 sm:mb-12 animate-fadeIn no-scrollbar overflow-x-auto pb-2 -mx-1 px-1">
             {categories.map(cat => (
               <button
                 key={cat}
                 onClick={() => setActiveCategory(cat)}
-                className={`px-5 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all duration-300 ${
+                className={`px-4 sm:px-5 py-1.5 sm:py-2 rounded-full text-[8px] sm:text-[10px] font-bold uppercase tracking-widest transition-all duration-300 whitespace-nowrap ${
                   activeCategory === cat
                     ? 'bg-amber-500 text-black shadow-[0_8px_20px_rgba(245,158,11,0.3)]'
                     : 'bg-white/4 border border-white/8 text-zinc-500 hover:text-white hover:border-white/15 hover:bg-white/6'
@@ -436,7 +482,7 @@ const App: React.FC = () => {
           </div>
 
           {/* Art Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-8">
             {filteredArtworks.map((art, idx) => (
               <div
                 key={art.id}
@@ -447,27 +493,27 @@ const App: React.FC = () => {
                 onMouseLeave={() => setHoveredCard(null)}
               >
                 {/* Image Container */}
-                <div className="relative overflow-hidden aspect-[4/5] mb-5 rounded-[1.75rem] bg-zinc-950 border border-white/5">
+                <div className="relative overflow-hidden aspect-[4/5] mb-4 sm:mb-5 rounded-[1.5rem] sm:rounded-[1.75rem] bg-zinc-950 border border-white/5">
                   <img
                     src={art.imageUrl}
                     alt={art.title}
                     className="w-full h-full object-cover transition-all duration-[2s] group-hover:scale-110 group-hover:opacity-50"
                   />
 
-                  {/* Hover overlay */}
+                  {/* Hover overlay — visible only on hover or tablet/mobile has tap */}
                   <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition-all duration-500">
-                    <div className="bg-white text-black px-8 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500 shadow-xl btn-shine">
+                    <div className="bg-white text-black px-6 sm:px-8 py-2 sm:py-2.5 rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500 shadow-xl btn-shine">
                       View Details
                     </div>
-                    <span className="text-zinc-300 text-[9px] uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity delay-100">
+                    <span className="text-zinc-300 text-[8px] sm:text-[9px] uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity delay-100">
                       Click to explore
                     </span>
                   </div>
 
                   {/* Badges */}
                   {art.isAuction && (
-                    <div className="absolute top-4 right-4">
-                      <div className="live-badge">
+                    <div className="absolute top-3 sm:top-4 right-3 sm:right-4">
+                      <div className="live-badge scale-90 sm:scale-100">
                         <div className="w-1.5 h-1.5 bg-red-400 rounded-full animate-pulse" />
                         Live
                       </div>
@@ -475,15 +521,15 @@ const App: React.FC = () => {
                   )}
                   {!art.isListed && (
                     <div className="absolute inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center">
-                      <span className="text-white text-[11px] font-black uppercase tracking-[0.4em] border-2 border-white/20 px-6 py-2.5 rounded-xl rotate-[-10deg]">
+                      <span className="text-white text-[10px] sm:text-[11px] font-black uppercase tracking-[0.3em] sm:tracking-[0.4em] border-2 border-white/20 px-5 sm:px-6 py-2 sm:py-2.5 rounded-xl rotate-[-10deg]">
                         Sold
                       </span>
                     </div>
                   )}
 
                   {/* Category label bottom-left */}
-                  <div className="absolute bottom-4 left-4 opacity-0 group-hover:opacity-100 transition-all">
-                    <span className="text-[8px] font-bold uppercase tracking-widest text-white/60 bg-black/60 px-2.5 py-1 rounded-lg backdrop-blur-sm">
+                  <div className="absolute bottom-3 sm:bottom-4 left-3 sm:left-4 opacity-0 group-hover:opacity-100 transition-all">
+                    <span className="text-[7px] sm:text-[8px] font-bold uppercase tracking-widest text-white/60 bg-black/60 px-2 sm:2.5 px-1 py-1 rounded-lg backdrop-blur-sm">
                       {art.category}
                     </span>
                   </div>
@@ -491,20 +537,20 @@ const App: React.FC = () => {
 
                 {/* Info */}
                 <div className="px-1">
-                  <h3 className="text-lg font-serif font-bold text-white group-hover:text-amber-400 transition-colors leading-tight italic mb-1">
+                  <h3 className="text-base sm:text-lg font-serif font-bold text-white group-hover:text-amber-400 transition-colors leading-tight italic mb-1 uppercase tracking-tight">
                     {art.title}
                   </h3>
-                  <div className="flex items-center gap-2 mb-4">
+                  <div className="flex items-center gap-2 mb-3 sm:mb-4">
                     <div className="w-3 h-px bg-amber-500/40" />
-                    <p className="text-zinc-500 text-[10px] font-semibold uppercase tracking-widest">{art.artist}</p>
+                    <p className="text-zinc-500 text-[9px] sm:text-[10px] font-semibold uppercase tracking-widest truncate max-w-[120px]">{art.artist}</p>
                     <span className="text-zinc-700">·</span>
-                    <p className="text-zinc-600 text-[10px]">{art.year}</p>
+                    <p className="text-zinc-600 text-[9px] sm:text-[10px]">{art.year}</p>
                   </div>
-                  <div className="flex justify-between items-center pt-4 border-t border-white/5">
-                    <p className="text-white font-bold text-lg">{toINRString(art.price)}</p>
+                  <div className="flex justify-between items-center pt-3 sm:pt-4 border-t border-white/5">
+                    <p className="text-white font-bold text-base sm:text-lg">{toINRString(art.price)}</p>
                     {art.isAuction && art.currentBid && (
                       <div className="text-right">
-                        <p className="text-[8px] text-zinc-600 uppercase tracking-widest">Current Bid</p>
+                        <p className="text-[7px] sm:text-[8px] text-zinc-600 uppercase tracking-widest font-bold">Current Bid</p>
                         <p className="text-amber-400 font-bold text-xs">{toINRString(art.currentBid)}</p>
                       </div>
                     )}
@@ -514,11 +560,11 @@ const App: React.FC = () => {
             ))}
 
             {filteredArtworks.length === 0 && (
-              <div className="col-span-full py-40 text-center">
-                <p className="text-5xl mb-4">🔍</p>
-                <p className="text-zinc-500 italic font-serif text-2xl font-light">No works found in the archive.</p>
-                <p className="text-zinc-700 text-sm mt-2">Try adjusting your search or category filter.</p>
-                <button onClick={() => { setSearchQuery(''); setActiveCategory('All'); }} className="mt-6 text-amber-500 text-xs font-bold uppercase tracking-widest hover:text-white transition-colors">
+              <div className="col-span-full py-20 sm:py-40 text-center">
+                <p className="text-4xl sm:text-5xl mb-4">🔍</p>
+                <p className="text-zinc-500 italic font-serif text-xl sm:text-2xl font-light">No works found in the archive.</p>
+                <p className="text-zinc-700 text-xs sm:text-sm mt-2">Try adjusting your search or category filter.</p>
+                <button onClick={() => { setSearchQuery(''); setActiveCategory('All'); }} className="mt-6 text-amber-500 text-[10px] sm:text-xs font-bold uppercase tracking-widest hover:text-white transition-colors">
                   Clear Filters →
                 </button>
               </div>
@@ -527,29 +573,29 @@ const App: React.FC = () => {
         </section>
 
         {/* CTA Section */}
-        <section className="pb-20">
-          <div className="relative glass rounded-[3rem] p-16 border border-white/5 overflow-hidden">
+        <section className="pb-10 sm:pb-20 px-1">
+          <div className="relative glass rounded-[2rem] sm:rounded-[3rem] p-8 sm:p-16 border border-white/5 overflow-hidden">
             {/* Background decoration */}
-            <div className="absolute top-0 right-0 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
-            <div className="absolute bottom-0 left-20 w-64 h-64 bg-indigo-500/5 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute top-0 right-0 w-48 h-48 sm:w-96 sm:h-96 bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute bottom-0 left-10 sm:left-20 w-32 h-32 sm:w-64 sm:h-64 bg-indigo-500/5 rounded-full blur-3xl pointer-events-none" />
 
-            <div className="relative flex flex-col lg:flex-row justify-between items-center gap-12">
+            <div className="relative flex flex-col lg:flex-row justify-between items-center gap-8 sm:gap-12 text-center lg:text-left">
               <div className="max-w-lg">
-                <span className="tag-pill mb-5 inline-block">Membership</span>
-                <h3 className="text-4xl font-serif text-white mb-5 italic font-bold leading-tight">
+                <span className="tag-pill mb-4 sm:mb-5 inline-block">Membership</span>
+                <h3 className="text-3xl sm:text-4xl font-serif text-white mb-4 sm:mb-5 italic font-bold leading-tight uppercase tracking-tight">
                   Join the inner circle of <span className="text-gold">sovereign collectors</span>
                 </h3>
-                <p className="text-zinc-400 text-base font-light leading-relaxed">
+                <p className="text-zinc-400 text-sm sm:text-base font-light leading-relaxed">
                   Early access to masterworks, curatorial reports, private auction invitations, and exclusive artist meetups.
                 </p>
               </div>
-              <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
+              <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto mt-4 lg:mt-0">
                 <input
                   type="email"
                   placeholder="Your email address"
-                  className="bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white outline-none focus:border-amber-500/50 w-full sm:w-72 text-sm font-medium placeholder:text-zinc-600 transition-all"
+                  className="bg-white/5 border border-white/10 rounded-xl sm:rounded-2xl px-5 sm:px-6 py-3.5 sm:py-4 text-white outline-none focus:border-amber-500/50 w-full sm:w-72 text-sm font-medium placeholder:text-zinc-600 transition-all text-center sm:text-left"
                 />
-                <button className="btn-shine bg-amber-500 hover:bg-amber-400 text-black px-8 py-4 rounded-2xl font-bold text-sm transition-all shadow-[0_10px_30px_rgba(245,158,11,0.25)] hover:shadow-[0_15px_40px_rgba(245,158,11,0.35)] whitespace-nowrap">
+                <button className="btn-shine bg-amber-500 hover:bg-amber-400 text-black px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl sm:rounded-2xl font-bold text-xs sm:text-sm transition-all shadow-[0_10px_30px_rgba(245,158,11,0.25)] hover:shadow-[0_15px_40px_rgba(245,158,11,0.35)] whitespace-nowrap uppercase tracking-widest">
                   Get Access →
                 </button>
               </div>
@@ -562,40 +608,69 @@ const App: React.FC = () => {
   if (isAuthLoading) {
     return (
       <div className="min-h-screen bg-[#050505] flex items-center justify-center">
-        <div className="w-12 h-12 border-2 border-amber-500/20 border-t-amber-500 rounded-full animate-spin" />
+        <div className="w-10 h-10 border-2 border-amber-500/20 border-t-amber-500 rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
     <div className="min-h-screen">
-      {!currentUser ? (
-        <AuthFlow onLogin={setCurrentUser} />
-      ) : (
-        <>
-          <Navbar
-            user={currentUser}
-            activeView={activeView}
-            onViewChange={setActiveView}
-            onLogout={handleLogout}
-            onSearch={setSearchQuery}
-            searchQuery={searchQuery}
-          />
-          <main className="pt-44 max-w-7xl mx-auto px-6 pb-24">
-            {renderContent()}
-          </main>
-          {selectedArtwork && (
-            <ArtworkDetails
-              artwork={selectedArtwork}
-              onClose={() => setSelectedArtwork(null)}
-              onAction={handleArtworkAction}
-              user={currentUser}
-            />
-          )}
-          {isTourActive && <VirtualTour artworks={artworks} onClose={() => setIsTourActive(false)} />}
-          <AiAssistant />
-        </>
+      <Navbar
+        user={currentUser}
+        activeView={activeView}
+        onViewChange={setActiveView}
+        onLogout={handleLogout}
+        onSearch={setSearchQuery}
+        searchQuery={searchQuery}
+      />
+      <main className="pt-24 sm:pt-44 max-w-7xl mx-auto px-4 sm:px-6 pb-16 sm:pb-24">
+        {renderContent()}
+      </main>
+      {selectedArtwork && (
+        <ArtworkDetails
+          artwork={selectedArtwork}
+          onClose={() => setSelectedArtwork(null)}
+          onAction={handleArtworkAction}
+          user={currentUser}
+        />
       )}
+      {isTourActive && <VirtualTour artworks={artworks} onClose={() => setIsTourActive(false)} />}
+      <AiAssistant />
+
+      {/* --- Mobile Bottom Navigation --- */}
+      <nav className="fixed bottom-0 left-0 right-0 z-[200] lg:hidden animate-fadeInUp">
+        <div className="glass mx-3 mb-4 rounded-2xl sm:rounded-3xl border border-white/10 shadow-[0_20px_60px_rgba(0,0,0,0.8)] px-2 py-2.5 flex items-center justify-around">
+          {[
+            { id: 'gallery', label: 'Explore', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' },
+            { id: 'exhibitions', label: 'Curated', icon: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4' },
+            { id: 'auctions', label: 'Live', icon: 'M13 10V3L4 14h7v7l9-11h-7z', badge: artworks.filter(a => a.isAuction).length },
+            { id: 'dashboard', label: 'Dashboard', icon: 'M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10' },
+            { id: 'profile', label: 'Account', icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z' }
+          ].map(link => (
+            <button
+              key={link.id}
+              onClick={() => setActiveView(link.id as any)}
+              className={`p-2.5 rounded-xl transition-all duration-300 relative ${
+                activeView === link.id
+                  ? 'bg-amber-500/15 text-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.2)]'
+                  : 'text-zinc-600 hover:text-white'
+              }`}
+            >
+              <svg className="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={link.icon} />
+              </svg>
+              <span className={`text-[8px] uppercase tracking-widest font-black block mt-1 ${activeView === link.id ? 'opacity-100' : 'opacity-0'}`}>
+                {link.label}
+              </span>
+              {link.badge && link.id === 'auctions' && (
+                <span className="absolute top-1.5 right-1.5 w-3.5 h-3.5 bg-red-500 text-[7px] text-white font-bold rounded-full flex items-center justify-center border border-black animate-pulse">
+                  {link.badge}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+      </nav>
     </div>
   );
 };

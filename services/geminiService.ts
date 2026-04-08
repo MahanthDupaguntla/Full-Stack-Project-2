@@ -4,7 +4,17 @@
 let _ai: any = null;
 
 async function getAI(): Promise<any | null> {
-  const apiKey = process.env.API_KEY || process.env.GEMINI_API_KEY;
+  let apiKey = '';
+  try {
+    // Attempt Vite env
+    apiKey = (import.meta as any).env.VITE_GEMINI_API_KEY;
+  } catch (e) {}
+  
+  // Fallback to process.env for Node/Test environments
+  if (!apiKey && typeof process !== 'undefined') {
+    apiKey = process.env?.GEMINI_API_KEY || process.env?.API_KEY || '';
+  }
+
   if (!apiKey || apiKey === 'PLACEHOLDER_API_KEY') {
     return null;
   }

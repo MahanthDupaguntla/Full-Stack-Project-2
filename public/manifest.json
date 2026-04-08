@@ -1,0 +1,20 @@
+{
+  "short_name": "ArtForge",
+  "name": "ArtForge | Premium Art Sanctuary",
+  "icons": [
+    {
+      "src": "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?auto=format&fit=crop&q=80&w=192",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?auto=format&fit=crop&q=80&w=512",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#040404",
+  "background_color": "#040404"
+}

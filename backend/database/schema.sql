@@ -18,7 +18,8 @@ CREATE TABLE IF NOT EXISTS users (
     subscription    VARCHAR(50)     DEFAULT 'Basic',
     joined_date     TIMESTAMP       DEFAULT CURRENT_TIMESTAMP,
     total_earned    DECIMAL(12,2)   DEFAULT 0.00,
-    bio             TEXT
+    bio             TEXT,
+    is_verified     BOOLEAN         DEFAULT FALSE
 );
 
 -- Artworks table
