@@ -6,7 +6,6 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
@@ -53,7 +52,7 @@ public class OtpService {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
-            helper.setFrom(fromEmail, "ArtForge Sanctuary");
+            helper.setFrom(fromEmail != null ? fromEmail : "noreply@artforge.com", "ArtForge Sanctuary");
             helper.setTo(email);
             helper.setSubject("Your ArtForge Verification Code");
 
