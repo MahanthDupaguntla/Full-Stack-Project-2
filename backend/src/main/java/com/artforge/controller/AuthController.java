@@ -7,16 +7,29 @@ import com.artforge.service.AuthService;
 import com.artforge.service.OtpService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
+// Defence-in-depth: controller-level CORS in case filter chain ordering causes issues
+@CrossOrigin(origins = "*", allowedHeaders = "*",
+        methods = {RequestMethod.GET, RequestMethod.POST,
+                   RequestMethod.PUT, RequestMethod.DELETE, RequestMethod.OPTIONS})
 public class AuthController {
 
     private final AuthService authService;
     private final OtpService otpService;
+
+    // ── CORS preflight — explicit OPTIONS handler so Railway never returns 405 ──
+    // A browser sends OPTIONS before every cross-origin POST/PUT/DELETE.
+    // This catches any edge-case where the global CORS filter isn't hit first.
+    @RequestMapping(value = "/api/auth/**", method = RequestMethod.OPTIONS)
+    public ResponseEntity<Void> handleAuthPreflight() {
+        return ResponseEntity.ok().build();
+    }
 
     // ── Health check (used by frontend to detect backend) ──────────────────────
     @GetMapping("/api/health")

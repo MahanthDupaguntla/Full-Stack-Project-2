@@ -1,44 +1,62 @@
 // AI Service - Works without API key using curated responses
 // If you want to enable real AI, set GEMINI_API_KEY in your environment
 
-let _ai: any = null;
+const GEMINI_API_URL =
+  'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
 
-async function getAI(): Promise<any | null> {
+function getApiKey(): string {
   let apiKey = '';
   try {
-    // Attempt Vite env
     apiKey = (import.meta as any).env.VITE_GEMINI_API_KEY;
-  } catch (e) {}
-  
-  // Fallback to process.env for Node/Test environments
+  } catch {}
+
   if (!apiKey && typeof process !== 'undefined') {
     apiKey = process.env?.GEMINI_API_KEY || process.env?.API_KEY || '';
   }
 
-  if (!apiKey || apiKey === 'PLACEHOLDER_API_KEY') {
-    return null;
-  }
-  if (_ai) return _ai;
+  return apiKey && apiKey !== 'PLACEHOLDER_API_KEY' ? apiKey : '';
+}
+
+async function generateText(prompt: string): Promise<string | null> {
+  const apiKey = getApiKey();
+  if (!apiKey) return null;
+
   try {
-    const { GoogleGenAI } = await import("@google/genai");
-    _ai = new GoogleGenAI({ apiKey });
-    return _ai;
+    const response = await fetch(`${GEMINI_API_URL}?key=${encodeURIComponent(apiKey)}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        contents: [
+          {
+            parts: [{ text: prompt }],
+          },
+        ],
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Gemini request failed with HTTP ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data?.candidates?.[0]?.content?.parts
+      ?.map((part: { text?: string }) => part.text ?? '')
+      .join('')
+      .trim() || null;
   } catch (error) {
-    console.warn("Could not initialize AI SDK:", error);
+    console.warn('Gemini request unavailable, using curated response:', error);
     return null;
   }
 }
 
 export const getCulturalInsight = async (title: string, artist: string, description: string): Promise<string> => {
   try {
-    const ai = await getAI();
-    if (ai) {
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.0-flash',
-        contents: `Provide a detailed cultural and historical analysis of a fictional artwork titled "${title}" by "${artist}". The description of the piece is: "${description}". Focus on potential influences, symbolism, and its place in modern art history. Format the response as a short educational essay.`,
-      });
-      return response.text || getFallbackInsight(title, artist, description);
-    }
+    const response = await generateText(
+      `Provide a detailed cultural and historical analysis of a fictional artwork titled "${title}" by "${artist}". The description of the piece is: "${description}". Focus on potential influences, symbolism, and its place in modern art history. Format the response as a short educational essay.`
+    );
+    if (response) return response;
   } catch (error) {
     console.warn("AI insight unavailable, using curated response:", error);
   }
@@ -47,14 +65,8 @@ export const getCulturalInsight = async (title: string, artist: string, descript
 
 export const getGalleryGuideResponse = async (userMessage: string, history: { role: string, parts: { text: string }[] }[]): Promise<string> => {
   try {
-    const ai = await getAI();
-    if (ai) {
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.0-flash',
-        contents: userMessage,
-      });
-      return response.text || getFallbackGuideResponse(userMessage);
-    }
+    const response = await generateText(userMessage);
+    if (response) return response;
   } catch (error) {
     console.warn("AI assistant unavailable, using curated response:", error);
   }
@@ -63,14 +75,10 @@ export const getGalleryGuideResponse = async (userMessage: string, history: { ro
 
 export const generateBrandStory = async (appName: string): Promise<string> => {
   try {
-    const ai = await getAI();
-    if (ai) {
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.0-flash',
-        contents: `Generate a sophisticated and inspiring brand story for a digital art platform named "${appName}". Focus on themes of digital craftsmanship, the intersection of art and technology, and the preservation of creative legacy. Format it as a short, elegant narrative.`,
-      });
-      return response.text || getFallbackBrandStory(appName);
-    }
+    const response = await generateText(
+      `Generate a sophisticated and inspiring brand story for a digital art platform named "${appName}". Focus on themes of digital craftsmanship, the intersection of art and technology, and the preservation of creative legacy. Format it as a short, elegant narrative.`
+    );
+    if (response) return response;
   } catch (error) {
     console.warn("AI brand story unavailable, using curated response:", error);
   }
@@ -103,4 +111,3 @@ function getFallbackGuideResponse(userMessage: string): string {
 function getFallbackBrandStory(appName: string): string {
   return `${appName} was born from a singular vision: to create a space where art transcends physical boundaries and becomes accessible to all.\n\nIn an age where technology and creativity converge, ${appName} stands as a digital atelier — a place where collectors discover masterworks, artists find their audience, and every visitor embarks on a journey through the boundless landscape of human expression.\n\nWe believe that every brushstroke tells a story, every sculpture holds a secret, and every digital creation opens a new frontier. ${appName} is more than a platform; it is a living gallery where the legacy of art is preserved, celebrated, and reimagined for generations to come.\n\nOur commitment is simple: to forge connections between creators and connoisseurs, bridging the gap between inspiration and appreciation through the transformative power of technology.`;
 }
-

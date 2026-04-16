@@ -1,22 +1,29 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { Suspense, lazy, useState, useEffect, useRef } from 'react';
 import { UserRole, Artwork, User } from './types';
 import Navbar from './components/Navbar';
-import ArtworkDetails from './components/ArtworkDetails';
-import VirtualTour from './components/VirtualTour';
-import AuthFlow from './components/AuthFlow';
-import AuctionHouse from './components/AuctionHouse';
-import UserProfile from './components/UserProfile';
-import {
-  ArtistDashboard,
-  CuratorDashboard,
-  AdminDashboard,
-  VisitorDashboard,
-} from './components/Dashboards';
 import { mockBackend } from './services/mockBackend';
 import { hybridBackend } from './services/apiService';
 import { toINRString } from './utils/currency';
 import { INITIAL_EXHIBITIONS } from './constants';
 import { getGalleryGuideResponse } from './services/geminiService';
+
+const ArtworkDetails = lazy(() => import('./components/ArtworkDetails'));
+const VirtualTour = lazy(() => import('./components/VirtualTour'));
+const AuthFlow = lazy(() => import('./components/AuthFlow'));
+const AuctionHouse = lazy(() => import('./components/AuctionHouse'));
+const UserProfile = lazy(() => import('./components/UserProfile'));
+const ArtistDashboard = lazy(() =>
+  import('./components/Dashboards').then((module) => ({ default: module.ArtistDashboard }))
+);
+const CuratorDashboard = lazy(() =>
+  import('./components/Dashboards').then((module) => ({ default: module.CuratorDashboard }))
+);
+const AdminDashboard = lazy(() =>
+  import('./components/Dashboards').then((module) => ({ default: module.AdminDashboard }))
+);
+const VisitorDashboard = lazy(() =>
+  import('./components/Dashboards').then((module) => ({ default: module.VisitorDashboard }))
+);
 
 // ─── AI Assistant ─────────────────────────────────────────────────────────────
 const AiAssistant: React.FC = () => {
@@ -195,6 +202,16 @@ const StatsTicker: React.FC<{ artworks: Artwork[] }> = ({ artworks }) => {
 };
 
 // ─── Main App ─────────────────────────────────────────────────────────────────
+const SectionLoader: React.FC<{ label?: string }> = ({ label = 'Loading ArtForge experience...' }) => (
+  <div className="flex min-h-[40vh] items-center justify-center px-6 py-20">
+    <div className="glass max-w-md rounded-[2rem] px-8 py-10 text-center shadow-[0_24px_80px_rgba(0,0,0,0.45)]">
+      <div className="mx-auto mb-5 h-12 w-12 animate-spin rounded-full border-2 border-white/10 border-t-amber-500" />
+      <p className="text-sm uppercase tracking-[0.3em] text-amber-500/80">ArtForge</p>
+      <p className="mt-3 text-sm font-medium text-zinc-300">{label}</p>
+    </div>
+  </div>
+);
+
 const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [activeView, setActiveView] = useState<
@@ -788,7 +805,9 @@ const App: React.FC = () => {
   if (!currentUser || activeView === 'login') {
     return (
       <>
-        {renderContent()}
+        <Suspense fallback={<SectionLoader label="Loading authentication..." />}>
+          {renderContent()}
+        </Suspense>
         <AiAssistant />
       </>
     );
@@ -805,17 +824,23 @@ const App: React.FC = () => {
         searchQuery={searchQuery}
       />
       <main className="pt-24 sm:pt-44 max-w-7xl mx-auto px-4 sm:px-6 pb-16 sm:pb-24">
-        {renderContent()}
+        <Suspense fallback={<SectionLoader />}>{renderContent()}</Suspense>
       </main>
       {selectedArtwork && (
-        <ArtworkDetails
-          artwork={selectedArtwork}
-          onClose={() => setSelectedArtwork(null)}
-          onAction={handleArtworkAction}
-          user={currentUser}
-        />
+        <Suspense fallback={<SectionLoader label="Loading artwork details..." />}>
+          <ArtworkDetails
+            artwork={selectedArtwork}
+            onClose={() => setSelectedArtwork(null)}
+            onAction={handleArtworkAction}
+            user={currentUser}
+          />
+        </Suspense>
       )}
-      {isTourActive && <VirtualTour artworks={artworks} onClose={() => setIsTourActive(false)} />}
+      {isTourActive && (
+        <Suspense fallback={<SectionLoader label="Opening virtual tour..." />}>
+          <VirtualTour artworks={artworks} onClose={() => setIsTourActive(false)} />
+        </Suspense>
+      )}
       <AiAssistant />
 
       {/* --- Mobile Bottom Navigation --- */}

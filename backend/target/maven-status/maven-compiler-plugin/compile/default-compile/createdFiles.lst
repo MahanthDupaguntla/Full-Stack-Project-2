@@ -1,6 +1,7 @@
 com\artforge\dto\ArtworkRequest.class
 com\artforge\repository\BidRepository.class
 com\artforge\ArtforgeApplication.class
+com\artforge\dto\LoginRequest$LoginRequestBuilder.class
 com\artforge\repository\ExhibitionRepository.class
 com\artforge\dto\LoginRequest.class
 com\artforge\model\Exhibition$ExhibitionStatus.class
@@ -26,6 +27,7 @@ com\artforge\config\SecurityConfig.class
 com\artforge\controller\ArtworkController.class
 com\artforge\model\User$UserBuilder.class
 com\artforge\model\Exhibition$ExhibitionBuilder.class
+com\artforge\dto\RegisterRequest$RegisterRequestBuilder.class
 com\artforge\security\UserDetailsServiceImpl.class
 com\artforge\model\User.class
 com\artforge\model\Bid$BidBuilder.class

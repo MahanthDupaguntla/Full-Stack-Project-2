@@ -8,9 +8,17 @@ import { Artwork, User, UserRole, Bid, SubscriptionType, Exhibition } from '../t
 import { mockBackend } from './mockBackend';
 
 // Strip trailing slash manually if accidentally provided to avoid double-slash 301 redirect issues
-// which notoriously transform POST requests into GET requests, causing HTTP 405 errors
+// which notoriously transform POST requests into GET requests, causing HTTP 405 errors.
 const rawUrl = (import.meta as any).env?.VITE_API_URL ?? '';
-const BASE_URL = rawUrl.endsWith('/') ? rawUrl.slice(0, -1) : rawUrl;
+const configuredBaseUrl = rawUrl.endsWith('/') ? rawUrl.slice(0, -1) : rawUrl;
+const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
+const isLocalHost = hostname === 'localhost' || hostname === '127.0.0.1';
+const BASE_URL = configuredBaseUrl || (isLocalHost ? '' : null);
+
+function getApiBaseUrl(): string {
+  if (BASE_URL) return BASE_URL;
+  throw new Error('Backend API is not configured. Set VITE_API_URL for production deployments.');
+}
 
 // ── Token helpers ──────────────────────────────────────────────────────────────
 const TOKEN_KEY = 'artforge_jwt';
@@ -20,6 +28,7 @@ export const clearToken = () => localStorage.removeItem(TOKEN_KEY);
 
 // ── Base fetch with proper JSON error parsing ──────────────────────────────────
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const apiBaseUrl = getApiBaseUrl();
   const token = getToken();
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -27,7 +36,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   };
   if (token) headers['Authorization'] = `Bearer ${token}`;
 
-  const res = await fetch(`${BASE_URL}${path}`, { ...options, headers });
+  const res = await fetch(`${apiBaseUrl}${path}`, { ...options, headers });
 
   if (!res.ok) {
     // Always try to parse JSON body — our GlobalExceptionHandler returns JSON
@@ -282,8 +291,14 @@ export async function isBackendAvailable(): Promise<boolean> {
   // Cache result for 60 seconds; always re-check before caching
   if (_backendAvailable !== null && (now - _lastCheck) < 60000) return _backendAvailable;
 
+  if (!BASE_URL && !isLocalHost) {
+    _backendAvailable = false;
+    _lastCheck = now;
+    return _backendAvailable;
+  }
+
   try {
-    const res = await fetch(`${BASE_URL}/api/health`, {
+    const res = await fetch(`${getApiBaseUrl()}/api/health`, {
       signal: AbortSignal.timeout(3000),
       headers: {
         'Accept': 'application/json'
@@ -315,8 +330,8 @@ export const hybridBackend = {
   async init() {
     this.available = await isBackendAvailable();
     console.log(this.available
-      ? '✅ ArtForge: Connected to Spring Boot backend at :8080'
-      : '⚠️  ArtForge: Backend not reachable — using mock data');
+      ? `ArtForge: Connected to backend${BASE_URL ? ` at ${BASE_URL}` : ' via local proxy'}`
+      : 'ArtForge: Backend not configured or reachable - using mock data');
     return this.available;
   },
 

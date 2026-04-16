@@ -20,6 +20,8 @@ export default defineConfig(({ mode }) => {
     define: {
       'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY || ''),
       'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY || ''),
+      // Expose VITE_API_URL so apiService.ts can reach the Railway backend
+      'import.meta.env.VITE_API_URL': JSON.stringify(env.VITE_API_URL || ''),
     },
     resolve: {
       alias: {

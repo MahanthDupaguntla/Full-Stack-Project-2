@@ -25,5 +25,6 @@ C:\Users\MAHANTH\Downloads\artforge\backend\src\main\java\com\artforge\service\O
 C:\Users\MAHANTH\Downloads\artforge\backend\src\main\java\com\artforge\dto\AuthResponse.java
 C:\Users\MAHANTH\Downloads\artforge\backend\src\main\java\com\artforge\model\UserRole.java
 C:\Users\MAHANTH\Downloads\artforge\backend\src\main\java\com\artforge\service\AuthService.java
+C:\Users\MAHANTH\Downloads\artforge\backend\src\main\java\com\artforge\config\GlobalExceptionHandler.java
 C:\Users\MAHANTH\Downloads\artforge\backend\src\main\java\com\artforge\dto\ArtworkRequest.java
 C:\Users\MAHANTH\Downloads\artforge\backend\src\main\java\com\artforge\repository\BidRepository.java
