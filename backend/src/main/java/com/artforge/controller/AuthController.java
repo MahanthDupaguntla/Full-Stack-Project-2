@@ -4,7 +4,6 @@ import com.artforge.dto.AuthResponse;
 import com.artforge.dto.LoginRequest;
 import com.artforge.dto.RegisterRequest;
 import com.artforge.service.AuthService;
-import com.artforge.service.OtpService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -20,7 +19,6 @@ import java.util.Map;
 public class AuthController {
 
     private final AuthService authService;
-    private final OtpService otpService;
 
     // ── CORS preflight — explicit OPTIONS handler so Railway never returns 405 ──
     // A browser sends OPTIONS before every cross-origin POST/PUT/DELETE.
@@ -47,16 +45,4 @@ public class AuthController {
         return ResponseEntity.ok(authService.login(req));
     }
 
-    @PostMapping("/api/auth/verify-otp")
-    public ResponseEntity<AuthResponse> verifyOtp(@RequestBody Map<String, String> body) {
-        return ResponseEntity.ok(authService.verifyOtp(body.get("email"), body.get("otp")));
-    }
-
-    @PostMapping("/api/auth/resend-otp")
-    public ResponseEntity<Map<String, String>> resendOtp(@RequestBody Map<String, String> body) {
-        String email = body.get("email");
-        otpService.generateAndSendOtp(email);
-        return ResponseEntity.ok(Map.of("message", "OTP resent to " + email));
-    }
 }
-
