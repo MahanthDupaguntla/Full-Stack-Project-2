@@ -44,9 +44,12 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 // Public endpoints
                 .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/api/health").permitAll()
                 .requestMatchers("/api/artworks").permitAll()
+                .requestMatchers("/api/artworks/search").permitAll()
                 .requestMatchers("/api/artworks/{id}").permitAll()
                 .requestMatchers("/api/exhibitions").permitAll()
+                .requestMatchers("/api/exhibitions/{id}").permitAll()
                 // Protected
                 .anyRequest().authenticated()
             )

@@ -1,22 +1,22 @@
 /**
  * apiService.ts
- * Real HTTP client that talks to the Spring Boot backend.
- * Falls back gracefully to mock data if backend is unreachable.
+ * HTTP client for the ArtForge Spring Boot backend.
+ * Falls back gracefully to mock data when backend is unreachable.
  */
 
 import { Artwork, User, UserRole, Bid, SubscriptionType, Exhibition } from '../types';
 import { mockBackend } from './mockBackend';
 
-const BASE_URL = (import.meta as any).env?.VITE_API_URL ?? 'http://localhost:8080';
+// Base URL — in dev, Vite proxies /api -> localhost:8080
+const BASE_URL = (import.meta as any).env?.VITE_API_URL ?? '';
 
 // ── Token helpers ──────────────────────────────────────────────────────────────
 const TOKEN_KEY = 'artforge_jwt';
-
-export const getToken  = () => localStorage.getItem(TOKEN_KEY);
-export const setToken  = (t: string) => localStorage.setItem(TOKEN_KEY, t);
+export const getToken   = (): string | null => localStorage.getItem(TOKEN_KEY);
+export const setToken   = (t: string) => localStorage.setItem(TOKEN_KEY, t);
 export const clearToken = () => localStorage.removeItem(TOKEN_KEY);
 
-// ── Base fetch ─────────────────────────────────────────────────────────────────
+// ── Base fetch with proper JSON error parsing ──────────────────────────────────
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const token = getToken();
   const headers: Record<string, string> = {
@@ -26,10 +26,22 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   if (token) headers['Authorization'] = `Bearer ${token}`;
 
   const res = await fetch(`${BASE_URL}${path}`, { ...options, headers });
+
   if (!res.ok) {
-    const err = await res.json().catch(() => ({ message: 'Request failed' }));
-    throw new Error(err.message || `HTTP ${res.status}`);
+    // Always try to parse JSON body — our GlobalExceptionHandler returns JSON
+    let message = `HTTP ${res.status}`;
+    try {
+      const errBody = await res.json();
+      message = errBody.message || errBody.error || message;
+    } catch {
+      // If body isn't JSON (shouldn't happen with our handler), use status text
+      message = res.statusText || message;
+    }
+    throw new Error(message);
   }
+
+  // 204 No Content
+  if (res.status === 204) return undefined as T;
   return res.json();
 }
 
@@ -46,16 +58,31 @@ export interface AuthPayload {
   totalEarned: number;
 }
 
-export async function apiRegister(name: string, email: string, password: string, role: UserRole): Promise<User> {
+export async function apiRegister(
+  name: string, email: string, password: string, role: UserRole
+): Promise<User> {
   const data = await request<AuthPayload>('/api/auth/register', {
     method: 'POST',
     body: JSON.stringify({ name, email, password, role }),
   });
-  if (data.token !== "PENDING_VERIFICATION") {
-    setToken(data.token);
+  // PENDING_VERIFICATION = OTP required
+  if (data.token === 'PENDING_VERIFICATION') {
+    setToken('');
   } else {
-    // Stash token state temporarily as empty string if verified needed
-    setToken("");
+    setToken(data.token);
+  }
+  return payloadToUser(data);
+}
+
+export async function apiLogin(email: string, password: string): Promise<User> {
+  const data = await request<AuthPayload>('/api/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ email, password }),
+  });
+  if (data.token === 'PENDING_VERIFICATION') {
+    setToken('');
+  } else {
+    setToken(data.token);
   }
   return payloadToUser(data);
 }
@@ -69,17 +96,11 @@ export async function apiVerifyOtp(email: string, otp: string): Promise<User> {
   return payloadToUser(data);
 }
 
-export async function apiLogin(email: string, password: string): Promise<User> {
-  const data = await request<AuthPayload>('/api/auth/login', {
+export async function apiResendOtp(email: string): Promise<void> {
+  await request<{ message: string }>('/api/auth/resend-otp', {
     method: 'POST',
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify({ email }),
   });
-  if (data.token !== "PENDING_VERIFICATION") {
-    setToken(data.token);
-  } else {
-    setToken("");
-  }
-  return payloadToUser(data);
 }
 
 export async function apiGetMe(): Promise<User> {
@@ -98,6 +119,11 @@ export async function apiGetArtwork(id: string): Promise<Artwork> {
   return mapArtwork(data);
 }
 
+export async function apiSearchArtworks(query: string): Promise<Artwork[]> {
+  const data = await request<any[]>(`/api/artworks/search?q=${encodeURIComponent(query)}`);
+  return data.map(mapArtwork);
+}
+
 export async function apiPurchase(artworkId: string): Promise<void> {
   await request<any>(`/api/artworks/${artworkId}/purchase`, { method: 'POST' });
 }
@@ -109,7 +135,9 @@ export async function apiPlaceBid(artworkId: string, amount: number): Promise<vo
   });
 }
 
-export async function apiCreateArtwork(data: Partial<Artwork> & { auctionDurationHours?: number }): Promise<Artwork> {
+export async function apiCreateArtwork(
+  data: Partial<Artwork> & { auctionDurationHours?: number }
+): Promise<Artwork> {
   const res = await request<any>('/api/artworks', {
     method: 'POST',
     body: JSON.stringify(data),
@@ -117,12 +145,7 @@ export async function apiCreateArtwork(data: Partial<Artwork> & { auctionDuratio
   return mapArtwork(res);
 }
 
-export async function apiUpdateArtwork(id: string, data: Partial<Artwork>): Promise<void> {
-  // Not fully implemented on backend, falling back for mock if needed, but here's a placeholder
-}
-
 // ── Users ──────────────────────────────────────────────────────────────────────
-
 export async function apiUpdateUser(updates: Partial<User>): Promise<User> {
   const data = await request<any>('/api/users/me', {
     method: 'PUT',
@@ -145,7 +168,6 @@ export async function apiUpdateUserRole(userId: string, role: UserRole): Promise
 }
 
 // ── Exhibitions ────────────────────────────────────────────────────────────────
-
 export async function apiGetExhibitions(): Promise<Exhibition[]> {
   const data = await request<any[]>('/api/exhibitions');
   return data.map(mapExhibition);
@@ -174,7 +196,7 @@ function payloadToUser(p: AuthPayload): User {
     name: p.name,
     email: p.email,
     role: p.role,
-    avatar: p.avatar ?? `https://api.dicebear.com/7.x/avataaars/svg?seed=${p.name}`,
+    avatar: p.avatar ?? `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(p.name)}`,
     walletBalance: Number(p.walletBalance ?? 50000),
     subscription: (p.subscription as SubscriptionType) ?? 'Basic',
     joinedDate: Date.now(),
@@ -189,12 +211,20 @@ function mapUser(u: any): User {
     name: u.name,
     email: u.email,
     role: u.role as UserRole,
-    avatar: u.avatar ?? `https://api.dicebear.com/7.x/avataaars/svg?seed=${u.name}`,
+    avatar: u.avatar ?? `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(u.name ?? '')}`,
     walletBalance: Number(u.walletBalance ?? 50000),
     subscription: (u.subscription as SubscriptionType) ?? 'Basic',
     joinedDate: u.joinedDate ? new Date(u.joinedDate).getTime() : Date.now(),
     totalEarned: Number(u.totalEarned ?? 0),
-    transactions: [],
+    transactions: (u.transactions ?? []).map((t: any) => ({
+      id: t.id,
+      type: t.type,
+      amount: Number(t.amount),
+      date: t.createdAt ? new Date(t.createdAt).getTime() : Date.now(),
+      description: t.description ?? '',
+      status: 'completed',
+      paymentMethod: 'ArtWallet',
+    })),
   };
 }
 
@@ -219,7 +249,7 @@ function mapArtwork(a: any): Artwork {
     culturalHistory: a.culturalHistory ?? '',
     curatorInsight: a.curatorInsight ?? '',
     isAuction: Boolean(a.isAuction),
-    currentBid: a.currentBid ? Number(a.currentBid) : undefined,
+    currentBid: a.currentBid != null ? Number(a.currentBid) : undefined,
     bidEndTime: a.bidEndTime ? new Date(a.bidEndTime).getTime() : undefined,
     bids,
     ownerId: a.owner?.id,
@@ -233,56 +263,61 @@ function mapExhibition(e: any): Exhibition {
     id: e.id,
     title: e.title,
     theme: e.theme ?? '',
-    curatorId: e.curator?.id ?? '',
-    artworkIds: e.artworks ? e.artworks.map((a: any) => a.id) : [],
+    curatorId: e.curator?.id ?? e.curatorId ?? '',
+    artworkIds: e.artworks ? e.artworks.map((a: any) => a.id) : (e.artworkIds ?? []),
     bannerUrl: e.bannerUrl ?? '',
     description: e.description ?? '',
     status: e.status ?? 'upcoming',
   };
 }
 
-// ── Backend availability check ────────────────────────────────────────────────
+// ── Backend availability — uses /api/health for fast, lightweight ping ─────────
 let _backendAvailable: boolean | null = null;
+let _lastCheck = 0;
 
 export async function isBackendAvailable(): Promise<boolean> {
-  if (_backendAvailable !== null) return _backendAvailable;
+  const now = Date.now();
+  // Cache result for 60 seconds; always re-check before caching
+  if (_backendAvailable !== null && (now - _lastCheck) < 60000) return _backendAvailable;
+
   try {
-    const res = await fetch(`${BASE_URL}/api/artworks`, { signal: AbortSignal.timeout(2000) });
+    const res = await fetch(`${BASE_URL}/api/health`, {
+      signal: AbortSignal.timeout(3000),
+    });
     _backendAvailable = res.ok;
   } catch {
     _backendAvailable = false;
   }
+  _lastCheck = now;
   return _backendAvailable;
 }
 
-// ── Hybrid backend (real API with mock fallback) ───────────────────────────────
+// Force reset (e.g., on logout)
+export function resetBackendCheck() {
+  _backendAvailable = null;
+  _lastCheck = 0;
+}
+
+// ── Hybrid backend (real API + mock fallback) ─────────────────────────────────
 export const hybridBackend = {
   available: false,
 
   async init() {
     this.available = await isBackendAvailable();
     console.log(this.available
-      ? '✅ ArtForge: Connected to Spring Boot backend'
-      : '⚠️  ArtForge: Backend not found — using mock data');
+      ? '✅ ArtForge: Connected to Spring Boot backend at :8080'
+      : '⚠️  ArtForge: Backend not reachable — using mock data');
     return this.available;
   },
 
   async fetchCurrentUser(): Promise<User | null> {
     if (!this.available) return mockBackend.getCurrentUser();
-    if (!getToken()) return null;
+    const token = getToken();
+    if (!token) return null;
     try {
       return await apiGetMe();
     } catch {
       clearToken();
-      return null;
-    }
-  },
-
-  async verifyOtp(email: string, otp: string): Promise<User | null> {
-    if (!this.available) return null; // Only backend supports OTP
-    try {
-      return await apiVerifyOtp(email, otp);
-    } catch {
       return null;
     }
   },
@@ -315,7 +350,6 @@ export const hybridBackend = {
     }
   },
 
-  // Thin wrappers to mock for unchanged features
   async getAllUsers(): Promise<User[]> {
     if (!this.available) return mockBackend.getAllUsers();
     try { return await apiGetAllUsers(); } catch { return mockBackend.getAllUsers(); }
@@ -356,5 +390,9 @@ export const hybridBackend = {
   endAuction: (id: string) => mockBackend.endAuction(id),
   getPurchaseHistoryForArtist: (name: string) => mockBackend.getPurchaseHistoryForArtist(name),
   getCurrentUser: () => mockBackend.getCurrentUser(),
-  logout: () => { clearToken(); mockBackend.logout(); },
+  logout: () => {
+    clearToken();
+    resetBackendCheck();
+    mockBackend.logout();
+  },
 };

@@ -28,7 +28,7 @@ dist-ssr/
 *.sln
 *.sw?
 
-# Environment variables
+# Environment variables — never commit secrets
 .env
 .env.local
 .env.development.local
@@ -41,4 +41,11 @@ dist-ssr/
 # TypeScript
 *.tsbuildinfo
 
-.vercel
+# Backend build artifacts
+backend/target/
+backend/*.zip
+backend/maven.zip
+
+# Large files
+*.class
+*.jar
