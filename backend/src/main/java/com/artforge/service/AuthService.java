@@ -23,7 +23,18 @@ public class AuthService {
 
     public AuthResponse register(RegisterRequest req) {
         if (userRepository.existsByEmail(req.getEmail())) {
-            throw new RuntimeException("Email already registered");
+            User existingUser = userRepository.findByEmail(req.getEmail()).get();
+            if (existingUser.isVerified()) {
+                throw new RuntimeException("Email already registered");
+            } else {
+                // User exists but isn't verified. Update details and resend OTP.
+                existingUser.setName(req.getName());
+                existingUser.setPassword(passwordEncoder.encode(req.getPassword()));
+                existingUser.setRole(req.getRole() != null ? req.getRole() : UserRole.VISITOR);
+                userRepository.save(existingUser);
+                otpService.generateAndSendOtp(existingUser.getEmail());
+                return buildResponse("PENDING_VERIFICATION", existingUser);
+            }
         }
 
         User user = User.builder()
