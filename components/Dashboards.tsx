@@ -324,7 +324,7 @@ export const VisitorDashboard: React.FC<{ artworks: Artwork[], user: User, onUpd
   );
 };
 
-export const AdminDashboard: React.FC<{ user: User, onUpdateUser: (u: User) => void }> = ({ user, onUpdateUser }) => {
+export const AdminDashboard: React.FC<{ user: User, onUpdateUser: (u: User) => void }> = () => {
   const [users, setUsers] = useState<User[]>([]);
 
   React.useEffect(() => {
@@ -507,7 +507,7 @@ export const AdminDashboard: React.FC<{ user: User, onUpdateUser: (u: User) => v
   );
 };
 
-export const CuratorDashboard: React.FC<{ user: User, onUpdateUser: (u: User) => void }> = ({ user, onUpdateUser }) => {
+export const CuratorDashboard: React.FC<{ user: User, onUpdateUser: (u: User) => void }> = () => {
   const [exhibitions, setExhibitions] = useState<Exhibition[]>([]);
 
   React.useEffect(() => {
