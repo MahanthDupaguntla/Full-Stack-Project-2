@@ -333,13 +333,13 @@ const App: React.FC = () => {
       }
       switch (currentUser.role) {
         case UserRole.ARTIST:
-          return <ArtistDashboard artworks={artworks} />;
+          return <ArtistDashboard artworks={artworks} user={currentUser} onUpdateUser={setCurrentUser} />;
         case UserRole.CURATOR:
-          return <CuratorDashboard />;
+          return <CuratorDashboard user={currentUser} onUpdateUser={setCurrentUser} />;
         case UserRole.ADMIN:
-          return <AdminDashboard />;
+          return <AdminDashboard user={currentUser} onUpdateUser={setCurrentUser} />;
         default:
-          return <VisitorDashboard artworks={artworks} />;
+          return <VisitorDashboard artworks={artworks} user={currentUser} onUpdateUser={setCurrentUser} />;
       }
     }
     if (activeView === 'profile') {

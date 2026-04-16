@@ -28,7 +28,7 @@ public class ArtworkService {
     private final TransactionRepository transactionRepository;
 
     public List<Artwork> getAllListed() {
-        return artworkRepository.findByIsListedTrue();
+        return artworkRepository.findAll();
     }
 
     public Artwork getById(String id) {
@@ -158,5 +158,22 @@ public class ArtworkService {
 
     public List<Artwork> search(String query) {
         return artworkRepository.searchArtworks(query);
+    }
+
+    @Transactional
+    public Artwork updateListing(String id, boolean isListed, BigDecimal price, String ownerEmail) {
+        Artwork artwork = getById(id);
+        User owner = userRepository.findByEmail(ownerEmail)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        if (artwork.getOwner() == null || !artwork.getOwner().getId().equals(owner.getId())) {
+            throw new RuntimeException("Only the owner can update the listing");
+        }
+
+        artwork.setIsListed(isListed);
+        if (price != null) {
+            artwork.setPrice(price);
+        }
+        return artworkRepository.save(artwork);
     }
 }

@@ -40,14 +40,13 @@ const TransactionItem: React.FC<{ tx: Transaction }> = ({ tx }) => (
   </div>
 );
 
-export const ArtistDashboard: React.FC<{ artworks: Artwork[] }> = ({ artworks }) => {
+export const ArtistDashboard: React.FC<{ artworks: Artwork[], user: User, onUpdateUser: (u: User) => void }> = ({ artworks, user, onUpdateUser }) => {
   const [showUpload, setShowUpload] = useState(false);
   const [cameraActive, setCameraActive] = useState(false);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  const user = hybridBackend.getCurrentUser()!;
   const myArtworks = artworks.filter(a => a.artist === user.name);
 
   const startCamera = async () => {
@@ -229,14 +228,13 @@ export const ArtistDashboard: React.FC<{ artworks: Artwork[] }> = ({ artworks })
   );
 };
 
-export const VisitorDashboard: React.FC<{ artworks: Artwork[] }> = ({ artworks }) => {
-  const user = hybridBackend.getCurrentUser()!;
+export const VisitorDashboard: React.FC<{ artworks: Artwork[], user: User, onUpdateUser: (u: User) => void }> = ({ artworks, user, onUpdateUser }) => {
   const myCollection = artworks.filter(a => a.currentOwnerName === user.name);
 
   const handleList = async (id: string) => {
     const price = prompt("Listing Price (INR):", "15000");
     if (price) {
-      await hybridBackend.listArtwork(id, false, Number(price));
+      await hybridBackend.listArtwork(id, true, Number(price));
       window.location.reload();
     }
   };
@@ -248,9 +246,18 @@ export const VisitorDashboard: React.FC<{ artworks: Artwork[] }> = ({ artworks }
             <h2 className="text-4xl sm:text-5xl font-serif text-white mb-2 italic">My Sanctuary</h2>
             <p className="text-zinc-500 text-sm">The private collection of {user.name}</p>
           </div>
-          <button onClick={() => { 
+          <button onClick={async () => { 
             const amt = prompt('Top Up Amount (INR):', '50000'); 
-            if(amt) { alert(`Successfully added \${toINRString(Number(amt))} to your secure trading wallet.`); window.location.reload(); } 
+            if(amt) {
+              const numAmt = Number(amt);
+              if (isNaN(numAmt) || numAmt <= 0) return;
+              try {
+                await hybridBackend.updateUser({ ...user, walletBalance: user.walletBalance + numAmt });
+                const updatedUser = await hybridBackend.fetchCurrentUser();
+                if (updatedUser) onUpdateUser(updatedUser);
+                alert(`Successfully added ${toINRString(numAmt)} to your secure trading wallet.`);
+              } catch(e: any) { alert(e.message); }
+            } 
           }} className="w-full sm:w-auto bg-amber-500 text-black px-8 py-3 rounded-full text-sm font-bold hover:bg-white transition-all shadow-lg">
             Top Up Balance
           </button>
@@ -317,7 +324,7 @@ export const VisitorDashboard: React.FC<{ artworks: Artwork[] }> = ({ artworks }
   );
 };
 
-export const AdminDashboard: React.FC = () => {
+export const AdminDashboard: React.FC<{ user: User, onUpdateUser: (u: User) => void }> = ({ user, onUpdateUser }) => {
   const [users, setUsers] = useState<User[]>([]);
 
   React.useEffect(() => {
@@ -500,7 +507,7 @@ export const AdminDashboard: React.FC = () => {
   );
 };
 
-export const CuratorDashboard: React.FC = () => {
+export const CuratorDashboard: React.FC<{ user: User, onUpdateUser: (u: User) => void }> = ({ user, onUpdateUser }) => {
   const [exhibitions, setExhibitions] = useState<Exhibition[]>([]);
 
   React.useEffect(() => {

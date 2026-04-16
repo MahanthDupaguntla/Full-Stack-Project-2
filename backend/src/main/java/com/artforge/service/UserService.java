@@ -25,6 +25,9 @@ public class UserService {
         if (updates.getName() != null) user.setName(updates.getName());
         if (updates.getBio() != null) user.setBio(updates.getBio());
         if (updates.getAvatar() != null) user.setAvatar(updates.getAvatar());
+        if (updates.getWalletBalance() != null) {
+            user.setWalletBalance(updates.getWalletBalance());
+        }
         return userRepository.save(user);
     }
 

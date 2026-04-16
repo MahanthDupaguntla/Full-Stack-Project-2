@@ -156,6 +156,14 @@ export async function apiCreateArtwork(
   return mapArtwork(res);
 }
 
+export async function apiListArtwork(id: string, isListed: boolean, price?: number): Promise<Artwork> {
+  const data = await request<any>(`/api/artworks/${id}/list`, {
+    method: 'PUT',
+    body: JSON.stringify({ isListed, price }),
+  });
+  return mapArtwork(data);
+}
+
 // ── Users ──────────────────────────────────────────────────────────────────────
 export async function apiUpdateUser(updates: Partial<User>): Promise<User> {
   const data = await request<any>('/api/users/me', {
@@ -411,7 +419,14 @@ export const hybridBackend = {
   },
 
   updateArtwork: (a: Artwork) => mockBackend.updateArtwork(a),
-  listArtwork: (...args: any[]) => (mockBackend.listArtwork as any)(...args),
+  async listArtwork(id: string, isListed: boolean, price?: number): Promise<void> {
+    if (!this.available) return mockBackend.listArtwork(id, isListed, price);
+    try {
+      await apiListArtwork(id, isListed, price);
+    } catch (e: any) {
+      alert(e.message);
+    }
+  },
   endAuction: (id: string) => mockBackend.endAuction(id),
   getPurchaseHistoryForArtist: (name: string) => mockBackend.getPurchaseHistoryForArtist(name),
   getCurrentUser: () => mockBackend.getCurrentUser(),

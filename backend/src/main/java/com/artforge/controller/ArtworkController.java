@@ -64,4 +64,17 @@ public class ArtworkController {
                                    @AuthenticationPrincipal UserDetails user) {
         return ResponseEntity.ok(artworkService.placeBid(id, req.getAmount(), user.getUsername()));
     }
+
+    // PUT /api/artworks/{id}/list
+    @PutMapping("/{id}/list")
+    public ResponseEntity<Artwork> updateListing(@PathVariable String id,
+                                                 @RequestBody Map<String, Object> body,
+                                                 @AuthenticationPrincipal UserDetails user) {
+        boolean isListed = Boolean.parseBoolean(body.get("isListed").toString());
+        java.math.BigDecimal price = null;
+        if (body.get("price") != null) {
+            price = new java.math.BigDecimal(body.get("price").toString());
+        }
+        return ResponseEntity.ok(artworkService.updateListing(id, isListed, price, user.getUsername()));
+    }
 }
