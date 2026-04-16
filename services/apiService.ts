@@ -295,34 +295,8 @@ let _backendAvailable: boolean | null = null;
 let _lastCheck = 0;
 
 export async function isBackendAvailable(): Promise<boolean> {
-  const now = Date.now();
-  // Cache result for 60 seconds; always re-check before caching
-  if (_backendAvailable !== null && (now - _lastCheck) < 60000) return _backendAvailable;
-
-  if (!BASE_URL && !isLocalHost) {
-    _backendAvailable = false;
-    _lastCheck = now;
-    return _backendAvailable;
-  }
-
-  try {
-    const res = await fetch(`${getApiBaseUrl()}/api/health`, {
-      signal: AbortSignal.timeout(3000),
-      headers: {
-        'Accept': 'application/json'
-      }
-    });
-    if (res.ok) {
-      const data = await res.json();
-      _backendAvailable = data.status === 'UP';
-    } else {
-      _backendAvailable = false;
-    }
-  } catch {
-    _backendAvailable = false;
-  }
-  _lastCheck = now;
-  return _backendAvailable;
+  // DEMO MODE OVERRIDE: Always use mock data regardless of backend status
+  return false;
 }
 
 // Force reset (e.g., on logout)
