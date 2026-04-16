@@ -7,8 +7,10 @@
 import { Artwork, User, UserRole, Bid, SubscriptionType, Exhibition } from '../types';
 import { mockBackend } from './mockBackend';
 
-// Base URL — in dev, Vite proxies /api -> localhost:8080
-const BASE_URL = (import.meta as any).env?.VITE_API_URL ?? '';
+// Strip trailing slash manually if accidentally provided to avoid double-slash 301 redirect issues
+// which notoriously transform POST requests into GET requests, causing HTTP 405 errors
+const rawUrl = (import.meta as any).env?.VITE_API_URL ?? '';
+const BASE_URL = rawUrl.endsWith('/') ? rawUrl.slice(0, -1) : rawUrl;
 
 // ── Token helpers ──────────────────────────────────────────────────────────────
 const TOKEN_KEY = 'artforge_jwt';
@@ -283,8 +285,16 @@ export async function isBackendAvailable(): Promise<boolean> {
   try {
     const res = await fetch(`${BASE_URL}/api/health`, {
       signal: AbortSignal.timeout(3000),
+      headers: {
+        'Accept': 'application/json'
+      }
     });
-    _backendAvailable = res.ok;
+    if (res.ok) {
+      const data = await res.json();
+      _backendAvailable = data.status === 'UP';
+    } else {
+      _backendAvailable = false;
+    }
   } catch {
     _backendAvailable = false;
   }
