@@ -311,7 +311,7 @@ export const VisitorDashboard: React.FC<{ artworks: Artwork[], user: User, onUpd
             <div className="glass p-6 sm:p-10 rounded-2xl sm:rounded-3xl">
               <h3 className="text-xl sm:text-2xl font-serif text-white mb-6 sm:mb-8 italic leading-none">Activity</h3>
               <div className="space-y-4 max-h-[300px] sm:max-h-[400px] overflow-y-auto pr-2 scrollbar-none">
-                {user.transactions.length > 0 ? user.transactions.slice().reverse().map(tx => (
+                {(user.transactions || []).length > 0 ? (user.transactions || []).slice().reverse().map(tx => (
                   <TransactionItem key={tx.id} tx={tx} />
                 )) : (
                   <p className="text-center py-12 text-zinc-600 italic text-xs">No recent activity.</p>

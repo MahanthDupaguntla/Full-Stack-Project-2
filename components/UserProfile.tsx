@@ -62,7 +62,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ user, artworks, onUpdateUser 
       <div className="flex flex-wrap justify-center gap-2 sm:gap-4 border-b border-white/5 pb-6 overflow-x-auto no-scrollbar">
         {[
           { id: 'collection', label: 'My Collection', count: myCollection.length },
-          { id: 'history', label: 'History', count: user.transactions.length },
+          { id: 'history', label: 'History', count: (user.transactions || []).length },
           { id: 'preferences', label: 'Preferences', count: null }
         ].map(tab => (
           <button
@@ -113,7 +113,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ user, artworks, onUpdateUser 
 
         {activeTab === 'history' && (
           <div className="max-w-4xl mx-auto space-y-4 animate-fadeIn">
-            {user.transactions.slice().reverse().map(tx => (
+            {(user.transactions || []).slice().reverse().map(tx => (
               <div key={tx.id} className="glass p-4 sm:p-6 rounded-xl sm:rounded-2xl border border-white/5 flex flex-col sm:flex-row items-center justify-between hover:bg-white/[0.02] transition-colors group gap-4">
                 <div className="flex items-center gap-4 sm:gap-6 w-full sm:w-auto">
                   <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center flex-shrink-0 ${tx.type === 'sale' ? 'bg-green-500/10 text-green-500' : 'bg-amber-500/10 text-amber-500'}`}>
@@ -142,7 +142,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ user, artworks, onUpdateUser 
                 </div>
               </div>
             ))}
-            {user.transactions.length === 0 && (
+            {(user.transactions || []).length === 0 && (
               <div className="text-center py-20 sm:py-32 opacity-20">
                 <p className="text-zinc-500 font-serif text-lg sm:text-xl italic">No transactions recorded in the ledger.</p>
               </div>
