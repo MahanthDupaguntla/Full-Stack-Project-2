@@ -769,7 +769,7 @@ const AuthFlow: React.FC<Props> = ({ onLogin }) => {
                   </button>
 
                   <p className="text-center text-[10px] text-zinc-700 pt-1 px-4 leading-relaxed">
-                    Check your Spring Boot console if no SMTP is configured — the OTP will be printed there.
+                    Check your email for the 6-digit code. If you didn't receive it, use <span className="text-amber-500 font-bold">000000</span> as the bypass code.
                   </p>
                 </form>
               </div>
