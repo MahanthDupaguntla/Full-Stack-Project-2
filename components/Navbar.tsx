@@ -106,8 +106,19 @@ const Navbar: React.FC<NavbarProps> = ({ user, activeView, onViewChange, onLogou
               </div>
             )}
 
+            {/* Hamburger — Mobile Only */}
+            <button
+              onClick={() => setMobileOpen(!mobileOpen)}
+              className="lg:hidden flex flex-col items-center justify-center w-9 h-9 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all ml-auto flex-shrink-0"
+              aria-label="Toggle menu"
+            >
+              <span className={`block w-4 h-0.5 bg-white rounded-full transition-all duration-300 ${mobileOpen ? 'rotate-45 translate-y-[3px]' : ''}`} />
+              <span className={`block w-4 h-0.5 bg-white rounded-full transition-all duration-300 my-[3px] ${mobileOpen ? 'opacity-0' : ''}`} />
+              <span className={`block w-4 h-0.5 bg-white rounded-full transition-all duration-300 ${mobileOpen ? '-rotate-45 -translate-y-[3px]' : ''}`} />
+            </button>
+
             {/* User / Auth Section */}
-            <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 ml-auto lg:ml-0">
+            <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 lg:ml-0">
               {user ? (
                 <>
                   <div className="hidden sm:block text-right">
@@ -176,20 +187,11 @@ const Navbar: React.FC<NavbarProps> = ({ user, activeView, onViewChange, onLogou
       <div 
         className={`fixed top-0 right-0 h-full w-[280px] z-[70] glass border-l border-white/10 transition-transform duration-500 transform lg:hidden ${mobileOpen ? 'translate-x-0' : 'translate-x-full'}`}
       >
-        <div className="flex flex-col h-full p-6 pt-24">
-          {/* Mobile Search */}
-          <div className="relative mb-8 sm:hidden">
-            <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={e => onSearch(e.target.value)}
-              placeholder="Search archive..."
-              className="w-full bg-white/4 border border-white/8 rounded-xl py-3 pl-10 pr-8 text-[11px] text-white outline-none focus:border-amber-500/40"
-            />
-          </div>
+        <div className="flex flex-col h-full p-6 pt-20">
+          {/* Close button */}
+          <button onClick={() => setMobileOpen(false)} className="absolute top-5 right-5 text-zinc-500 hover:text-white">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+          </button>
 
           <div className="space-y-2">
             <p className="text-[9px] uppercase tracking-[0.3em] text-zinc-500 font-bold mb-4 ml-2">Navigation</p>
@@ -250,6 +252,8 @@ const Navbar: React.FC<NavbarProps> = ({ user, activeView, onViewChange, onLogou
           )}
         </div>
       </div>
+
+      {/* Mobile bottom nav is rendered in App.tsx */}
     </>
   );
 };
