@@ -225,23 +225,13 @@ const AuthFlow: React.FC<Props> = ({ onLogin }) => {
 
       let user: User;
 
-      // ── Real Spring Boot auth ────────────────────────────────────────────
       if (mode === 'signup') {
         user = await apiRegister(name.trim(), email.trim(), password, role);
       } else {
         user = await apiLogin(email.trim(), password);
       }
 
-      // Check if OTP verification is needed
-      const token = getToken();
-      if (token === '' || token === null) {
-        setIsLoading(false);
-        setStep('otp');
-        startResendTimer();
-        return;
-      }
-
-      // Verified — proceed
+      // Proceed directly — no OTP step
       saveCredentials();
       showSuccessAndLogin(user);
     } catch (err: any) {
