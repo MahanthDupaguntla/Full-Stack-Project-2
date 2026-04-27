@@ -71,10 +71,10 @@ public class OtpService {
             log.info("✅ OTP email sent successfully to {}", email);
 
         } catch (Exception e) {
-            // RENDER MAY BLOCK SMTP PORTS (25, 465, 587) ON FREE TIERS.
+            // RAILWAY BLOCKS SMTP PORTS (25, 465, 587) ON HOBBY TIERS.
             // Instead of throwing an error and crashing registration, we swallow the error 
             // and log the OTP so the admin can see it in logs.
-            log.error("❌ Render SMTP blocked email to {}. Use bypass code 000000.", email);
+            log.error("❌ Railway SMTP blocked email to {}. Use bypass code 000000.", email);
             log.info("🚨 DEMO MODE OTP FOR {}: [{}]", email, otp);
             // We intentionally do NOT throw an exception here anymore, so the frontend 
             // proceeds to the OTP screen instead of showing a red error.

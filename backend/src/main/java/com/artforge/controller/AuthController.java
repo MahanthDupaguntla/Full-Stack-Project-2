@@ -20,7 +20,7 @@ public class AuthController {
 
     private final AuthService authService;
 
-    // ── CORS preflight — explicit OPTIONS handler so Render never returns 405 ──
+    // ── CORS preflight — explicit OPTIONS handler so Railway never returns 405 ──
     // A browser sends OPTIONS before every cross-origin POST/PUT/DELETE.
     // This catches any edge-case where the global CORS filter isn't hit first.
     @RequestMapping(value = "/api/auth/**", method = RequestMethod.OPTIONS)

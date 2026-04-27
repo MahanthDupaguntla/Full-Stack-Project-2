@@ -65,7 +65,7 @@ public class SecurityConfig {
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
-        // Parse comma-separated origins from application.properties / Render env var
+        // Parse comma-separated origins from application.properties / Railway env var
         List<String> origins = Arrays.stream(allowedOrigins.split(","))
                 .map(String::trim)
                 .filter(s -> !s.isEmpty())
