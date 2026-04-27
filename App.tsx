@@ -1,7 +1,6 @@
 import React, { Suspense, lazy, useState, useEffect, useRef } from 'react';
 import { UserRole, Artwork, User } from './types';
 import Navbar from './components/Navbar';
-import { mockBackend } from './services/mockBackend';
 import { hybridBackend } from './services/apiService';
 import { toINRString } from './utils/currency';
 import { INITIAL_EXHIBITIONS } from './constants';
@@ -217,26 +216,24 @@ const App: React.FC = () => {
   const [activeView, setActiveView] = useState<
     'gallery' | 'exhibitions' | 'auctions' | 'dashboard' | 'sold' | 'timeline' | 'profile' | 'login'
   >('login');
-  const [artworks, setArtworks] = useState<Artwork[]>(() => mockBackend.getArtworks());
+  const [artworks, setArtworks] = useState<Artwork[]>([]);
   const [selectedArtwork, setSelectedArtwork] = useState<Artwork | null>(null);
   const [isTourActive, setIsTourActive] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
   const [isAuthLoading, setIsAuthLoading] = useState(true);
 
-  // Init hybrid backend on mount
+  // Init backend on mount
   useEffect(() => {
-    hybridBackend.init().then((online) => {
+    hybridBackend.init().then(() => {
       hybridBackend.fetchCurrentUser().then((user) => {
         setCurrentUser(user);
         if (user) {
-          setActiveView('gallery'); // Already authenticated -> skip login
+          setActiveView('gallery');
         }
         setIsAuthLoading(false);
       });
-      if (online) {
-        hybridBackend.getArtworks().then(setArtworks);
-      }
+      hybridBackend.getArtworks().then(setArtworks);
     });
   }, []);
   const [activeCategory, setActiveCategory] = useState('All');
@@ -266,7 +263,9 @@ const App: React.FC = () => {
       if (success) {
         alert(`Congratulations! You now own "${art.title}". 🎨`);
         await refreshData();
-        setCurrentUser(mockBackend.getCurrentUser());
+        // Refresh user from backend to get updated wallet
+        const updatedUser = await hybridBackend.fetchCurrentUser();
+        if (updatedUser) setCurrentUser(updatedUser);
         setSelectedArtwork(null);
       }
     }

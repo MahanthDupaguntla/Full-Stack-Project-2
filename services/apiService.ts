@@ -1,11 +1,10 @@
 /**
  * apiService.ts
  * HTTP client for the ArtForge Spring Boot backend.
- * Falls back gracefully to mock data when backend is unreachable.
+ * Connects directly to the live backend — no mock/demo fallback.
  */
 
 import { Artwork, User, UserRole, Bid, SubscriptionType, Exhibition } from '../types';
-import { mockBackend } from './mockBackend';
 
 // Strip trailing slash manually if accidentally provided to avoid double-slash 301 redirect issues
 // which notoriously transform POST requests into GET requests, causing HTTP 405 errors.
@@ -15,9 +14,9 @@ const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
 const isLocalHost = hostname === 'localhost' || hostname === '127.0.0.1';
 const BASE_URL = configuredBaseUrl || (isLocalHost ? '' : null);
 
-function getApiBaseUrl(): string {
-  if (BASE_URL) return BASE_URL;
-  throw new Error('Backend API is not configured. Set VITE_API_URL for production deployments.');
+function getApiBaseUrl(): string | null {
+  if (BASE_URL !== null) return BASE_URL;
+  return null;
 }
 
 // ── Token helpers ──────────────────────────────────────────────────────────────
@@ -29,6 +28,9 @@ export const clearToken = () => localStorage.removeItem(TOKEN_KEY);
 // ── Base fetch with proper JSON error parsing ──────────────────────────────────
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const apiBaseUrl = getApiBaseUrl();
+  if (apiBaseUrl === null) {
+    throw new Error('Backend API is not configured. Set VITE_API_URL for production deployments.');
+  }
   const token = getToken();
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -164,6 +166,18 @@ export async function apiListArtwork(id: string, isListed: boolean, price?: numb
   return mapArtwork(data);
 }
 
+export async function apiUpdateArtwork(id: string, updates: Partial<Artwork>): Promise<Artwork> {
+  const data = await request<any>(`/api/artworks/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(updates),
+  });
+  return mapArtwork(data);
+}
+
+export async function apiDeleteArtwork(id: string): Promise<void> {
+  await request<any>(`/api/artworks/${id}`, { method: 'DELETE' });
+}
+
 // ── Users ──────────────────────────────────────────────────────────────────────
 export async function apiUpdateUser(updates: Partial<User>): Promise<User> {
   const data = await request<any>('/api/users/me', {
@@ -295,8 +309,28 @@ let _backendAvailable: boolean | null = null;
 let _lastCheck = 0;
 
 export async function isBackendAvailable(): Promise<boolean> {
-  // DEMO MODE OVERRIDE: Always use mock data regardless of backend status
-  return false;
+  const now = Date.now();
+  if (_backendAvailable !== null && (now - _lastCheck) < 10000) {
+    return _backendAvailable;
+  }
+  
+  _lastCheck = now;
+  try {
+    const apiBaseUrl = getApiBaseUrl();
+    if (apiBaseUrl === null) {
+      _backendAvailable = false;
+      return false;
+    }
+    const res = await fetch(`${apiBaseUrl}/api/health`, {
+      method: 'GET',
+      headers: { 'Accept': 'application/json' },
+    });
+    _backendAvailable = res.ok;
+  } catch (error) {
+    _backendAvailable = false;
+  }
+  
+  return _backendAvailable;
 }
 
 // Force reset (e.g., on logout)
@@ -305,7 +339,7 @@ export function resetBackendCheck() {
   _lastCheck = 0;
 }
 
-// ── Hybrid backend (real API + mock fallback) ─────────────────────────────────
+// ── Live backend (real API only — no mock fallback) ───────────────────────────
 export const hybridBackend = {
   available: false,
 
@@ -313,12 +347,11 @@ export const hybridBackend = {
     this.available = await isBackendAvailable();
     console.log(this.available
       ? `ArtForge: Connected to backend${BASE_URL ? ` at ${BASE_URL}` : ' via local proxy'}`
-      : 'ArtForge: Backend not configured or reachable - using mock data');
+      : 'ArtForge: ⚠️ Backend not reachable — features will be unavailable');
     return this.available;
   },
 
   async fetchCurrentUser(): Promise<User | null> {
-    if (!this.available) return mockBackend.getCurrentUser();
     const token = getToken();
     if (!token) return null;
     try {
@@ -330,13 +363,11 @@ export const hybridBackend = {
   },
 
   async getArtworks(): Promise<Artwork[]> {
-    if (!this.available) return mockBackend.getArtworks();
     try { return await apiGetArtworks(); }
-    catch { return mockBackend.getArtworks(); }
+    catch { return []; }
   },
 
-  async purchaseArtwork(artworkId: string, user: User): Promise<boolean> {
-    if (!this.available) return mockBackend.purchaseArtwork(artworkId, user);
+  async purchaseArtwork(artworkId: string, _user: User): Promise<boolean> {
     try {
       await apiPurchase(artworkId);
       return true;
@@ -346,8 +377,7 @@ export const hybridBackend = {
     }
   },
 
-  async placeBid(artworkId: string, user: User, amount: number): Promise<boolean> {
-    if (!this.available) return mockBackend.placeBid(artworkId, user, amount);
+  async placeBid(artworkId: string, _user: User, amount: number): Promise<boolean> {
     try {
       await apiPlaceBid(artworkId, amount);
       return true;
@@ -358,55 +388,57 @@ export const hybridBackend = {
   },
 
   async getAllUsers(): Promise<User[]> {
-    if (!this.available) return mockBackend.getAllUsers();
-    try { return await apiGetAllUsers(); } catch { return mockBackend.getAllUsers(); }
+    try { return await apiGetAllUsers(); } catch { return []; }
   },
 
   async getExhibitions(): Promise<Exhibition[]> {
-    if (!this.available) return mockBackend.getExhibitions();
-    try { return await apiGetExhibitions(); } catch { return mockBackend.getExhibitions(); }
+    try { return await apiGetExhibitions(); } catch { return []; }
   },
 
   async updateExhibition(e: Exhibition): Promise<void> {
-    if (!this.available) return mockBackend.updateExhibition(e);
-    try { await apiUpdateExhibition(e.id, e); } catch { mockBackend.updateExhibition(e); }
+    await apiUpdateExhibition(e.id, e);
   },
 
   async createExhibition(e: Partial<Exhibition>): Promise<Exhibition> {
-    if (!this.available) return mockBackend.createExhibition(e);
-    try { return await apiCreateExhibition(e); } catch { return mockBackend.createExhibition(e); }
+    return await apiCreateExhibition(e);
   },
 
   async updateUserRole(id: string, role: UserRole): Promise<void> {
-    if (!this.available) return mockBackend.updateUserRole(id, role);
-    try { await apiUpdateUserRole(id, role); } catch { mockBackend.updateUserRole(id, role); }
+    await apiUpdateUserRole(id, role);
   },
 
   async updateUser(u: User): Promise<void> {
-    if (!this.available) return mockBackend.updateUser(u);
-    try { await apiUpdateUser(u); } catch { mockBackend.updateUser(u); }
+    await apiUpdateUser(u);
   },
 
   async uploadArtwork(a: any): Promise<Artwork> {
-    if (!this.available) return mockBackend.uploadArtwork(a);
-    try { return await apiCreateArtwork(a); } catch { return mockBackend.uploadArtwork(a); }
+    return await apiCreateArtwork(a);
   },
 
-  updateArtwork: (a: Artwork) => mockBackend.updateArtwork(a),
+  async updateArtwork(id: string, updates: Partial<Artwork>): Promise<Artwork> {
+    return await apiUpdateArtwork(id, updates);
+  },
+
+  async deleteArtwork(id: string): Promise<void> {
+    await apiDeleteArtwork(id);
+  },
+
   async listArtwork(id: string, isListed: boolean, price?: number): Promise<void> {
-    if (!this.available) return mockBackend.listArtwork(id, isListed, price);
     try {
       await apiListArtwork(id, isListed, price);
     } catch (e: any) {
       alert(e.message);
     }
   },
-  endAuction: (id: string) => mockBackend.endAuction(id),
-  getPurchaseHistoryForArtist: (name: string) => mockBackend.getPurchaseHistoryForArtist(name),
-  getCurrentUser: () => mockBackend.getCurrentUser(),
+
+  // These need backend endpoints — currently no-ops
+  endAuction: (_id: string) => {},
+  getPurchaseHistoryForArtist: (_name: string) => [],
+
+  getCurrentUser: (): User | null => null,
+
   logout: () => {
     clearToken();
     resetBackendCheck();
-    mockBackend.logout();
   },
 };

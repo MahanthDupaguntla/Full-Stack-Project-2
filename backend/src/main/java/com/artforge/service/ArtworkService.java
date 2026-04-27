@@ -176,4 +176,45 @@ public class ArtworkService {
         }
         return artworkRepository.save(artwork);
     }
+
+    @Transactional
+    public Artwork update(String id, ArtworkRequest req, String email) {
+        Artwork artwork = getById(id);
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // Only the owner or an ADMIN can edit
+        boolean isOwner = artwork.getOwner() != null && artwork.getOwner().getId().equals(user.getId());
+        boolean isAdmin = user.getRole().name().equals("ADMIN");
+        if (!isOwner && !isAdmin) {
+            throw new RuntimeException("You can only edit your own artworks");
+        }
+
+        if (req.getTitle() != null) artwork.setTitle(req.getTitle());
+        if (req.getDescription() != null) artwork.setDescription(req.getDescription());
+        if (req.getPrice() != null) artwork.setPrice(req.getPrice());
+        if (req.getCategory() != null) artwork.setCategory(req.getCategory());
+        if (req.getImageUrl() != null) artwork.setImageUrl(req.getImageUrl());
+        if (req.getYear() != null) artwork.setYear(req.getYear());
+
+        return artworkRepository.save(artwork);
+    }
+
+    @Transactional
+    public void delete(String id, String email) {
+        Artwork artwork = getById(id);
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // Only the owner or an ADMIN can delete
+        boolean isOwner = artwork.getOwner() != null && artwork.getOwner().getId().equals(user.getId());
+        boolean isAdmin = user.getRole().name().equals("ADMIN");
+        if (!isOwner && !isAdmin) {
+            throw new RuntimeException("You can only delete your own artworks");
+        }
+
+        // Remove related bids first
+        bidRepository.deleteByArtwork(artwork);
+        artworkRepository.delete(artwork);
+    }
 }

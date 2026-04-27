@@ -77,4 +77,20 @@ public class ArtworkController {
         }
         return ResponseEntity.ok(artworkService.updateListing(id, isListed, price, user.getUsername()));
     }
+
+    // PUT /api/artworks/{id} — edit artwork details (Artist/Admin)
+    @PutMapping("/{id}")
+    public ResponseEntity<Artwork> update(@PathVariable String id,
+                                          @RequestBody ArtworkRequest req,
+                                          @AuthenticationPrincipal UserDetails user) {
+        return ResponseEntity.ok(artworkService.update(id, req, user.getUsername()));
+    }
+
+    // DELETE /api/artworks/{id} — remove artwork (Artist/Admin)
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Map<String, String>> delete(@PathVariable String id,
+                                                      @AuthenticationPrincipal UserDetails user) {
+        artworkService.delete(id, user.getUsername());
+        return ResponseEntity.ok(Map.of("message", "Artwork deleted successfully"));
+    }
 }

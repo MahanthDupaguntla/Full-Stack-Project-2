@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { UserRole, User } from '../types';
-import { mockBackend } from '../services/mockBackend';
 import {
   apiLogin, apiRegister, apiVerifyOtp, apiResendOtp,
   isBackendAvailable, getToken, setToken, clearToken,
@@ -218,38 +217,33 @@ const AuthFlow: React.FC<Props> = ({ onLogin }) => {
     try {
       const backendUp = backendStatus === 'online' || await isBackendAvailable();
 
+      if (!backendUp) {
+        setError('Backend server is not reachable. Please try again later.');
+        setIsLoading(false);
+        return;
+      }
+
       let user: User;
 
-      if (backendUp) {
-        // ── Real Spring Boot auth ────────────────────────────────────────────
-        if (mode === 'signup') {
-          user = await apiRegister(name.trim(), email.trim(), password, role);
-        } else {
-          user = await apiLogin(email.trim(), password);
-        }
-
-        // Check if OTP verification is needed
-        const token = getToken();
-        if (token === '' || token === null) {
-          setIsLoading(false);
-          setStep('otp');
-          startResendTimer();
-          return;
-        }
-
-        // Verified — proceed
-        saveCredentials();
-        showSuccessAndLogin(user);
+      // ── Real Spring Boot auth ────────────────────────────────────────────
+      if (mode === 'signup') {
+        user = await apiRegister(name.trim(), email.trim(), password, role);
       } else {
-        // ── Mock fallback ────────────────────────────────────────────────────
-        const displayName = mode === 'signup'
-          ? name.trim()
-          : email.trim().split('@')[0].replace(/[._-]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-        await new Promise(r => setTimeout(r, 800));
-        user = mockBackend.login(displayName, role);
-        saveCredentials();
-        showSuccessAndLogin(user);
+        user = await apiLogin(email.trim(), password);
       }
+
+      // Check if OTP verification is needed
+      const token = getToken();
+      if (token === '' || token === null) {
+        setIsLoading(false);
+        setStep('otp');
+        startResendTimer();
+        return;
+      }
+
+      // Verified — proceed
+      saveCredentials();
+      showSuccessAndLogin(user);
     } catch (err: any) {
       setError(err.message ?? 'Something went wrong. Please try again.');
       setIsLoading(false);
@@ -282,13 +276,7 @@ const AuthFlow: React.FC<Props> = ({ onLogin }) => {
     setIsLoading(true);
     setError('');
     try {
-      const backendUp = await isBackendAvailable();
-      if (backendUp) {
-        await apiResendOtp(email.trim());
-      } else {
-        // In mock mode, just start timer
-        await new Promise(r => setTimeout(r, 500));
-      }
+      await apiResendOtp(email.trim());
       startResendTimer();
     } catch (err: any) {
       setError(err.message ?? 'Failed to resend OTP. Please try again.');
@@ -450,12 +438,12 @@ const AuthFlow: React.FC<Props> = ({ onLogin }) => {
             <div className={`w-1.5 h-1.5 rounded-full ${
               backendStatus === 'checking' ? 'bg-yellow-500 animate-pulse' :
               backendStatus === 'online'   ? 'bg-green-400 animate-pulse' :
-                                            'bg-zinc-600'
+                                            'bg-red-500'
             }`} />
             <span className="text-[9px] text-zinc-600 uppercase tracking-widest font-semibold">
               {backendStatus === 'checking' ? 'Connecting...' :
-               backendStatus === 'online'   ? 'Live · Spring Boot Connected' :
-                                             'Demo Mode · Backend Offline'}
+               backendStatus === 'online'   ? 'Live · Backend Connected' :
+                                             'Server Unavailable'}
             </span>
           </div>
         </div>
@@ -521,9 +509,9 @@ const AuthFlow: React.FC<Props> = ({ onLogin }) => {
 
                 {/* Backend status */}
                 <div className="flex items-center justify-center gap-2 pt-2">
-                  <div className={`w-1.5 h-1.5 rounded-full ${backendStatus === 'online' ? 'bg-green-400' : 'bg-zinc-600'}`} />
+                  <div className={`w-1.5 h-1.5 rounded-full ${backendStatus === 'online' ? 'bg-green-400' : 'bg-red-500'}`} />
                   <span className="text-[9px] text-zinc-600 uppercase tracking-widest">
-                    {backendStatus === 'online' ? 'Spring Boot • Connected' : 'Demo Mode • Mock Data'}
+                    {backendStatus === 'online' ? 'Backend • Connected' : 'Server Unavailable'}
                   </span>
                 </div>
               </div>
@@ -618,7 +606,7 @@ const AuthFlow: React.FC<Props> = ({ onLogin }) => {
                       <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500">Password</label>
                       <button
                         type="button"
-                        onClick={() => alert('Password reset — check your email (in demo mode, use any password)')}
+                        onClick={() => alert('Password reset feature coming soon. Contact admin@artforge.com for help.')}
                         className="text-[9px] font-bold text-amber-500/60 hover:text-amber-400 uppercase tracking-widest transition-colors"
                       >
                         Forgot?
@@ -696,8 +684,8 @@ const AuthFlow: React.FC<Props> = ({ onLogin }) => {
                   {/* Status */}
                   <p className="text-center text-[10px] text-zinc-700 px-4 leading-relaxed">
                     {backendStatus === 'online'
-                      ? '🟢 Connected to Spring Boot backend on :8080'
-                      : '⚠️ Backend offline — running in demo mode'}
+                      ? '🟢 Connected to ArtForge backend'
+                      : '🔴 Backend offline — please check server status'}
                   </p>
                 </form>
               </div>

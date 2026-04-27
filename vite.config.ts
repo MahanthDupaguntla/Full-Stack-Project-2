@@ -10,9 +10,15 @@ export default defineConfig(({ mode }) => {
       host: '0.0.0.0',
       proxy: {
         '/api': {
-          target: 'http://localhost:8080',
+          target: env.VITE_BACKEND_URL || env.VITE_API_URL || 'http://localhost:8080',
           changeOrigin: true,
-          secure: false,
+          secure: true,
+          configure: (proxy) => {
+            proxy.on('proxyReq', (proxyReq) => {
+              // Remove Origin header so Railway doesn't treat this as a CORS request
+              proxyReq.removeHeader('origin');
+            });
+          },
         }
       }
     },
