@@ -6,17 +6,31 @@
 
 import { Artwork, User, UserRole, Bid, SubscriptionType, Exhibition } from '../types';
 
-// Strip trailing slash manually if accidentally provided to avoid double-slash 301 redirect issues
-// which notoriously transform POST requests into GET requests, causing HTTP 405 errors.
-const rawUrl = (import.meta as any).env?.VITE_API_URL ?? '';
-const configuredBaseUrl = rawUrl.endsWith('/') ? rawUrl.slice(0, -1) : rawUrl;
-const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
-const isLocalHost = hostname === 'localhost' || hostname === '127.0.0.1';
-const BASE_URL = configuredBaseUrl || (isLocalHost ? '' : null);
+// ── Resolve the backend base URL ───────────────────────────────────────────────
+// Priority: VITE_API_URL > VITE_BACKEND_URL > localhost fallback (dev only)
+// Strip trailing slash to avoid double-slash 301 redirect issues that silently
+// convert POST requests into GET requests, causing HTTP 405 errors.
+function resolveBaseUrl(): string | null {
+  const raw =
+    (import.meta as any).env?.VITE_API_URL ||
+    (import.meta as any).env?.VITE_BACKEND_URL ||
+    '';
+  const cleaned = raw.endsWith('/') ? raw.slice(0, -1) : raw;
+
+  if (cleaned) return cleaned;
+
+  // On localhost, proxy through Vite dev server (no base URL needed)
+  const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
+  if (hostname === 'localhost' || hostname === '127.0.0.1') return '';
+
+  // Production without configured URL — cannot reach backend
+  return null;
+}
+
+const BASE_URL = resolveBaseUrl();
 
 function getApiBaseUrl(): string | null {
-  if (BASE_URL !== null) return BASE_URL;
-  return null;
+  return BASE_URL;
 }
 
 // ── Token helpers ──────────────────────────────────────────────────────────────

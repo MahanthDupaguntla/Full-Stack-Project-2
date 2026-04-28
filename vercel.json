@@ -17,10 +17,8 @@
 
   "rewrites": [
     {
-      "source": "/((?!api/).*)",
+      "source": "/((?!assets/).*)",
       "destination": "/index.html"
     }
   ]
 }
-
-

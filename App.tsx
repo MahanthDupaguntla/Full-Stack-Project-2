@@ -24,6 +24,8 @@ const VisitorDashboard = lazy(() =>
   import('./components/Dashboards').then((module) => ({ default: module.VisitorDashboard }))
 );
 
+ 
+
 // ─── AI Assistant ─────────────────────────────────────────────────────────────
 const AiAssistant: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -57,9 +59,9 @@ const AiAssistant: React.FC = () => {
   };
 
   return (
-    <div className="fixed bottom-[max(env(safe-area-inset-bottom),20px)] right-4 sm:bottom-6 sm:right-6 z-[200]">
+    <div className="fixed bottom-28 right-3 lg:bottom-6 lg:right-6 z-[190]">
       {isOpen ? (
-        <div className="glass w-[calc(100vw-24px)] sm:w-[340px] h-[520px] max-h-[85vh] rounded-3xl overflow-hidden flex flex-col shadow-[0_40px_80px_rgba(0,0,0,0.8)] border border-white/10 animate-fadeInUp fixed bottom-3 right-3 sm:relative sm:bottom-0 sm:right-0">
+        <div className="glass w-[calc(100vw-24px)] sm:w-[340px] h-[400px] lg:h-[520px] max-h-[65vh] lg:max-h-[85vh] rounded-3xl overflow-hidden flex flex-col shadow-[0_40px_80px_rgba(0,0,0,0.8)] border border-white/10 animate-fadeInUp fixed bottom-28 right-3 lg:bottom-6 lg:right-6">
           {/* Header */}
           <div className="flex items-center justify-between px-5 py-4 border-b border-white/8 bg-gradient-to-r from-amber-500/10 to-transparent">
             <div className="flex items-center gap-3">
@@ -142,12 +144,7 @@ const AiAssistant: React.FC = () => {
                 className="w-9 h-9 bg-amber-500 hover:bg-amber-400 rounded-xl flex items-center justify-center text-black transition-all btn-shine flex-shrink-0 shadow-lg shadow-amber-500/20"
               >
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2.5"
-                    d="M5 10l7-7m0 0l7 7m-7-7v18"
-                  />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 10l7-7m0 0l7 7m-7-7v18" />
                 </svg>
               </button>
             </div>
@@ -156,14 +153,12 @@ const AiAssistant: React.FC = () => {
       ) : (
         <button
           onClick={() => setIsOpen(true)}
-          className="group flex items-center gap-2 bg-white text-black px-5 sm:px-6 py-3.5 sm:py-4 rounded-xl sm:rounded-2xl font-bold uppercase tracking-[0.1em] text-[10px] sm:text-xs hover:bg-zinc-200 transition-all shadow-[0_10px_40px_rgba(255,255,255,0.15)] btn-shine"
+          className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 text-black flex items-center justify-center shadow-[0_8px_30px_rgba(245,158,11,0.4)] hover:shadow-[0_8px_40px_rgba(245,158,11,0.6)] hover:scale-110 active:scale-95 transition-all duration-300"
+          aria-label="Open AI Guide"
         >
-          <div className="w-5 h-5 bg-black rounded-full flex items-center justify-center mr-1">
-            <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M11 2v9h-3l4 11 1-11h3L11 2z" />
-            </svg>
-          </div>
-          ASK THE GUIDE
+          <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+          </svg>
         </button>
       )}
     </div>
@@ -213,88 +208,28 @@ const SectionLoader: React.FC<{ label?: string }> = ({ label = 'Loading ArtForge
 
 const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [activeView, setActiveView] = useState<
-    'gallery' | 'exhibitions' | 'auctions' | 'dashboard' | 'sold' | 'timeline' | 'profile' | 'login'
-  >('login');
+  const [activeView, setActiveView] = useState<'gallery'|'exhibitions'|'auctions'|'dashboard'|'sold'|'timeline'|'profile'|'login'|'cart'|'checkout'>('login');
   const [artworks, setArtworks] = useState<Artwork[]>([]);
   const [selectedArtwork, setSelectedArtwork] = useState<Artwork | null>(null);
   const [isTourActive, setIsTourActive] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-
+  const [cart, setCart] = useState<Artwork[]>([]);
+  const [cartOpen, setCartOpen] = useState(false);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
-
-  // Init backend on mount
-  useEffect(() => {
-    hybridBackend.init().then(() => {
-      hybridBackend.fetchCurrentUser().then((user) => {
-        setCurrentUser(user);
-        if (user) {
-          setActiveView('gallery');
-        }
-        setIsAuthLoading(false);
-      });
-      hybridBackend.getArtworks().then(setArtworks);
-    });
-  }, []);
   const [activeCategory, setActiveCategory] = useState('All');
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
-
-  const refreshData = async () => {
-    const arts = await hybridBackend.getArtworks();
-    setArtworks(arts);
-  };
-
-  const handleLogout = () => {
-    hybridBackend.logout();
-    setCurrentUser(null);
-    setActiveView('login');
-  };
-
-  const handleArtworkAction = async (art: Artwork) => {
-    if (!currentUser) {
-      alert('Please sign in to interact with the gallery.');
-      return;
-    }
-    if (art.isAuction) {
-      setActiveView('auctions');
-      setSelectedArtwork(null);
-    } else {
-      const success = await hybridBackend.purchaseArtwork(art.id, currentUser);
-      if (success) {
-        alert(`Congratulations! You now own "${art.title}". 🎨`);
-        await refreshData();
-        // Refresh user from backend to get updated wallet
-        const updatedUser = await hybridBackend.fetchCurrentUser();
-        if (updatedUser) setCurrentUser(updatedUser);
-        setSelectedArtwork(null);
-      }
-    }
-  };
-
-  const filteredArtworks = artworks.filter((a) => {
-    const q = searchQuery.toLowerCase();
-    const matchesSearch =
-      a.title.toLowerCase().includes(q) ||
-      a.artist.toLowerCase().includes(q) ||
-      a.category.toLowerCase().includes(q);
-    const matchesCategory = activeCategory === 'All' || a.category === activeCategory;
-    if (activeView === 'sold') return matchesSearch && matchesCategory && !a.isListed;
-    return matchesSearch && matchesCategory && a.isListed;
-  });
-
+  useEffect(() => { hybridBackend.init().then(() => { hybridBackend.fetchCurrentUser().then((user) => { setCurrentUser(user); if (user) setActiveView('gallery'); setIsAuthLoading(false); }); hybridBackend.getArtworks().then(setArtworks); }); }, []);
+  const addToCart = (art: Artwork) => { if (!cart.find(c => c.id === art.id)) setCart(prev => [...prev, art]); };
+  const removeFromCart = (id: string) => setCart(prev => prev.filter(c => c.id !== id));
+  const cartTotal = cart.reduce((sum, a) => sum + a.price, 0);
+  const handleCheckout = async () => { if (!currentUser || cart.length === 0) return; for (const art of cart) { await hybridBackend.purchaseArtwork(art.id, currentUser); } setCart([]); await refreshData(); const u = await hybridBackend.fetchCurrentUser(); if (u) setCurrentUser(u); setActiveView('gallery'); };
+  const refreshData = async () => { const a = await hybridBackend.getArtworks(); setArtworks(a); };
+  const handleLogout = () => { hybridBackend.logout(); setCurrentUser(null); setActiveView('login'); };
+  const handleArtworkAction = async (art: Artwork) => { if (!currentUser) { alert('Please sign in.'); return; } if (art.isAuction) { setActiveView('auctions'); setSelectedArtwork(null); return; } const success = await hybridBackend.purchaseArtwork(art.id, currentUser); if (success) { await refreshData(); const updatedUser = await hybridBackend.fetchCurrentUser(); if (updatedUser) setCurrentUser(updatedUser); setSelectedArtwork(null); } };
+  const filteredArtworks = artworks.filter((a) => { const q = searchQuery.toLowerCase(); return (a.title.toLowerCase().includes(q) || a.artist.toLowerCase().includes(q) || a.category.toLowerCase().includes(q)) && (activeCategory === 'All' || a.category === activeCategory) && (activeView === 'sold' ? !a.isListed : a.isListed); });
   const categories = ['All', ...Array.from(new Set(artworks.map((a) => a.category)))];
-
   const renderContent = () => {
-    if (activeView === 'login' || !currentUser) {
-      return (
-        <AuthFlow
-          onLogin={(u) => {
-            setCurrentUser(u);
-            setActiveView('gallery');
-          }}
-        />
-      );
-    }
+    if (activeView === 'login' || !currentUser) { return (<AuthFlow onLogin={(u) => { setCurrentUser(u); setActiveView('gallery'); }} />); }
     if (activeView === 'dashboard') {
       if (!currentUser) {
         return (
