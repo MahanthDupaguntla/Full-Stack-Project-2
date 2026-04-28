@@ -31,7 +31,10 @@ export const apiLogin = async (email: string, password?: string) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password: password || 'password' })
     });
-    if (!res.ok) throw new Error('Login failed');
+    if (!res.ok) {
+        const err = await res.json().catch(() => null);
+        throw new Error(err?.message || 'Login failed');
+    }
     const data = await res.json();
     if (data.token) setToken(data.token);
     return data.user;
@@ -43,7 +46,10 @@ export const apiRegister = async (name: string, email: string, password?: string
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, password: password || 'password', role: role || UserRole.VISITOR })
     });
-    if (!res.ok) throw new Error('Registration failed');
+    if (!res.ok) {
+        const err = await res.json().catch(() => null);
+        throw new Error(err?.message || 'Registration failed');
+    }
     const data = await res.json();
     if (data.token) setToken(data.token);
     return data.user;
@@ -56,14 +62,22 @@ export const hybridBackend = {
   available: true,
   init: async () => true,
   fetchCurrentUser: async () => {
-      const res = await fetch(`${API_BASE}/api/users/me`, { headers: authHeaders() });
-      if (!res.ok) throw new Error('Failed to fetch user');
-      return res.json();
+      try {
+          const res = await fetch(`${API_BASE}/api/users/me`, { headers: authHeaders() });
+          if (!res.ok) return null;
+          return await res.json();
+      } catch {
+          return null;
+      }
   },
   getArtworks: async () => {
-      const res = await fetch(`${API_BASE}/api/artworks`, { headers: authHeaders() });
-      if (!res.ok) throw new Error('Failed to fetch artworks');
-      return res.json();
+      try {
+          const res = await fetch(`${API_BASE}/api/artworks`, { headers: authHeaders() });
+          if (!res.ok) return [];
+          return await res.json();
+      } catch {
+          return [];
+      }
   },
   purchaseArtwork: async (artworkId: string, user: User) => {
       const res = await fetch(`${API_BASE}/api/artworks/${artworkId}/purchase`, {
@@ -83,14 +97,22 @@ export const hybridBackend = {
       return res.json();
   },
   getAllUsers: async () => {
-      const res = await fetch(`${API_BASE}/api/users`, { headers: authHeaders() });
-      if (!res.ok) throw new Error('Failed to fetch users');
-      return res.json();
+      try {
+          const res = await fetch(`${API_BASE}/api/users`, { headers: authHeaders() });
+          if (!res.ok) return [];
+          return await res.json();
+      } catch {
+          return [];
+      }
   },
   getExhibitions: async () => {
-      const res = await fetch(`${API_BASE}/api/exhibitions`, { headers: authHeaders() });
-      if (!res.ok) throw new Error('Failed to fetch exhibitions');
-      return res.json();
+      try {
+          const res = await fetch(`${API_BASE}/api/exhibitions`, { headers: authHeaders() });
+          if (!res.ok) return [];
+          return await res.json();
+      } catch {
+          return [];
+      }
   },
   updateExhibition: async (e: Exhibition) => {
       const res = await fetch(`${API_BASE}/api/exhibitions/${e.id}`, {
