@@ -78,6 +78,7 @@ export interface User {
   transactions: Transaction[];
   email: string;
   bio?: string;
+  isSuspended?: boolean;
 }
 
 export interface Sale {

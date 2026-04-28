@@ -24,6 +24,7 @@ export const hybridBackend = {
   createExhibition: async (e: Partial<Exhibition>) => mockBackend.createExhibition(e),
   updateUserRole: async (id: string, role: UserRole) => mockBackend.updateUserRole(id, role),
   updateUser: async (u: User) => mockBackend.updateUser(u),
+  toggleUserSuspension: async (id: string) => mockBackend.toggleUserSuspension(id),
   uploadArtwork: async (a: any) => mockBackend.uploadArtwork(a),
   updateArtwork: async (id: string, updates: Partial<Artwork>) => {
     const arts = mockBackend.getArtworks();

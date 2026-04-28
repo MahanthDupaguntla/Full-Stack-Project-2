@@ -460,6 +460,11 @@ export const AdminDashboard: React.FC<{ user: User, onUpdateUser: (u: User) => v
     hybridBackend.getAllUsers().then(setUsers);
   };
 
+  const handleToggleSuspension = async (userId: string) => {
+    await hybridBackend.toggleUserSuspension(userId);
+    hybridBackend.getAllUsers().then(setUsers);
+  };
+
   const handleForgeBrand = async () => {
     setIsForging(true);
     const story = await generateBrandStory('ArtForge');
@@ -525,11 +530,11 @@ export const AdminDashboard: React.FC<{ user: User, onUpdateUser: (u: User) => v
                  {users.filter(u => !filterIdentity || u.name.toLowerCase().includes(filterIdentity.toLowerCase()) || u.email.toLowerCase().includes(filterIdentity.toLowerCase())).map(u => (
                    <tr key={u.id} className="group hover:bg-white/[0.02] transition-colors">
                      <td className="py-5 sm:py-6">
-                       <div className="flex items-center gap-3 sm:gap-4">
+                       <div className={`flex items-center gap-3 sm:gap-4 ${u.isSuspended ? 'opacity-50 grayscale' : ''}`}>
                          <img src={u.avatar} className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-white/10 object-cover" />
                          <div className="min-w-0">
-                           <p className="font-bold text-white text-sm sm:text-base truncate">{u.name}</p>
-                           <p className="text-[10px] sm:text-xs text-zinc-500 truncate">{u.email}</p>
+                           <p className={`font-bold text-sm sm:text-base truncate ${u.isSuspended ? 'text-zinc-500 line-through' : 'text-white'}`}>{u.name}</p>
+                           <p className={`text-[10px] sm:text-xs truncate ${u.isSuspended ? 'text-zinc-500 line-through' : 'text-zinc-500'}`}>{u.email}</p>
                          </div>
                        </div>
                      </td>
@@ -556,7 +561,9 @@ export const AdminDashboard: React.FC<{ user: User, onUpdateUser: (u: User) => v
                             <option key={r} value={r}>{r}</option>
                           ))}
                         </select>
-                        <button onClick={() => alert('Access suspended...')} className="text-[9px] sm:text-[10px] text-red-500 font-bold uppercase tracking-widest hover:text-red-400">Suspend</button>
+                        <button onClick={() => handleToggleSuspension(u.id)} className={`text-[9px] sm:text-[10px] font-bold uppercase tracking-widest ${u.isSuspended ? 'text-green-500 hover:text-green-400' : 'text-red-500 hover:text-red-400'}`}>
+                          {u.isSuspended ? 'Restore' : 'Suspend'}
+                        </button>
                       </td>
                    </tr>
                  ))}

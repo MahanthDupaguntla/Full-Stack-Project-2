@@ -271,6 +271,10 @@ export const mockBackend = {
     const users = mockBackend.getAllUsers();
     let existing = users.find(u => u.name === name && u.role === role);
     
+    if (existing && existing.isSuspended) {
+      throw new Error('Account is suspended by administrator.');
+    }
+    
     if (!existing) {
       existing = {
         id: Math.random().toString(36).substr(2, 9),
@@ -294,5 +298,19 @@ export const mockBackend = {
 
   logout: () => {
     localStorage.removeItem(USER_KEY);
+  },
+
+  toggleUserSuspension: (userId: string) => {
+    const users = mockBackend.getAllUsers();
+    const index = users.findIndex(u => u.id === userId);
+    if (index !== -1) {
+      users[index].isSuspended = !users[index].isSuspended;
+      localStorage.setItem(ALL_USERS_KEY, JSON.stringify(users));
+      
+      const currentUser = mockBackend.getCurrentUser();
+      if (currentUser && currentUser.id === userId && users[index].isSuspended) {
+        mockBackend.logout();
+      }
+    }
   }
 };
