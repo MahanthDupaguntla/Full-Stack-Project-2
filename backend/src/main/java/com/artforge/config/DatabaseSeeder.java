@@ -18,6 +18,7 @@ import java.util.List;
 
 @Component
 @RequiredArgsConstructor
+@SuppressWarnings("null")
 public class DatabaseSeeder implements CommandLineRunner {
 
     private final UserRepository userRepository;
