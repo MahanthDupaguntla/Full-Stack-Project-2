@@ -36,7 +36,7 @@ const ArtworkDetails: React.FC<Props> = ({ artwork, onClose, onAction, user }) =
   }, [artwork]);
 
   const handleSaveInsight = async () => {
-    await hybridBackend.updateArtwork({ ...artwork, curatorInsight: editedInsight });
+    await hybridBackend.updateArtwork(artwork.id, { curatorInsight: editedInsight });
     setInsight(editedInsight);
     setIsEditing(false);
   };

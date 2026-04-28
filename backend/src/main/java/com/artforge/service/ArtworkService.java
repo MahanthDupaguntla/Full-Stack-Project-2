@@ -196,6 +196,8 @@ public class ArtworkService {
         if (req.getCategory() != null) artwork.setCategory(req.getCategory());
         if (req.getImageUrl() != null) artwork.setImageUrl(req.getImageUrl());
         if (req.getYear() != null) artwork.setYear(req.getYear());
+        if (req.getCuratorInsight() != null) artwork.setCuratorInsight(req.getCuratorInsight());
+        if (req.getCulturalHistory() != null) artwork.setCulturalHistory(req.getCulturalHistory());
 
         return artworkRepository.save(artwork);
     }

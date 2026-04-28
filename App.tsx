@@ -371,7 +371,7 @@ const App: React.FC = () => {
       }
     }
     if (activeView === 'profile') {
-      return <UserProfile user={currentUser} artworks={artworks} onUpdateUser={setCurrentUser} />;
+      return <UserProfile user={currentUser} artworks={artworks} onUpdateUser={setCurrentUser} onLogout={handleLogout} />;
     }
     if (activeView === 'auctions') {
       return (

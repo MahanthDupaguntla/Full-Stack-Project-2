@@ -14,4 +14,6 @@ public class ArtworkRequest {
     private String category;
     private Boolean isAuction = false;
     private Integer auctionDurationHours = 24;
+    private String curatorInsight;
+    private String culturalHistory;
 }

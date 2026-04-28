@@ -8,9 +8,10 @@ interface UserProfileProps {
   user: User;
   artworks: Artwork[];
   onUpdateUser: (user: User) => void;
+  onLogout: () => void;
 }
 
-const UserProfile: React.FC<UserProfileProps> = ({ user, artworks, onUpdateUser }) => {
+const UserProfile: React.FC<UserProfileProps> = ({ user, artworks, onUpdateUser, onLogout }) => {
   const [activeTab, setActiveTab] = useState<'collection' | 'history' | 'preferences'>('collection');
   const [bio, setBio] = useState(user.bio || '');
   const [isSaving, setIsSaving] = useState(false);
@@ -55,7 +56,10 @@ const UserProfile: React.FC<UserProfileProps> = ({ user, artworks, onUpdateUser 
         <div className="flex flex-col items-center md:items-end gap-1 sm:gap-2">
           <p className="text-[8px] sm:text-[10px] text-zinc-500 font-black uppercase tracking-[0.3em] mb-1 leading-none">Available Liquidity</p>
           <p className="text-3xl sm:text-4xl font-serif font-bold text-white tabular-nums">{toINRString(user.walletBalance)}</p>
-          <button className="mt-4 px-6 sm:px-8 py-2.5 sm:py-3 bg-white text-black rounded-lg sm:rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest hover:bg-amber-500 transition-all shadow-lg active:scale-95">Add Funds</button>
+          <div className="mt-4 flex gap-2 sm:gap-3">
+            <button className="px-6 sm:px-8 py-2.5 sm:py-3 bg-white text-black rounded-lg sm:rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest hover:bg-amber-500 transition-all shadow-lg active:scale-95">Add Funds</button>
+            <button onClick={onLogout} className="px-6 sm:px-8 py-2.5 sm:py-3 bg-transparent border border-white/20 text-white rounded-lg sm:rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest hover:border-red-500 hover:text-red-500 transition-all shadow-lg active:scale-95">Sign Out</button>
+          </div>
         </div>
       </header>
 
