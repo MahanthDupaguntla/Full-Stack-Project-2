@@ -423,19 +423,7 @@ const AuthFlow: React.FC<Props> = ({ onLogin }) => {
             </svg>
           </button>
 
-          {/* Backend status indicator */}
-          <div className="mt-8 auth-stagger-3 flex items-center gap-2">
-            <div className={`w-1.5 h-1.5 rounded-full ${
-              backendStatus === 'checking' ? 'bg-yellow-500 animate-pulse' :
-              backendStatus === 'online'   ? 'bg-green-400 animate-pulse' :
-                                            'bg-red-500'
-            }`} />
-            <span className="text-[9px] text-zinc-600 uppercase tracking-widest font-semibold">
-              {backendStatus === 'checking' ? 'Connecting...' :
-               backendStatus === 'online'   ? 'Live · Backend Connected' :
-                                             'Server Unavailable'}
-            </span>
-          </div>
+
         </div>
       </div>
     );
@@ -497,13 +485,7 @@ const AuthFlow: React.FC<Props> = ({ onLogin }) => {
                   ))}
                 </div>
 
-                {/* Backend status */}
-                <div className="flex items-center justify-center gap-2 pt-2">
-                  <div className={`w-1.5 h-1.5 rounded-full ${backendStatus === 'online' ? 'bg-green-400' : 'bg-red-500'}`} />
-                  <span className="text-[9px] text-zinc-600 uppercase tracking-widest">
-                    {backendStatus === 'online' ? 'Backend • Connected' : 'Server Unavailable'}
-                  </span>
-                </div>
+
               </div>
             )}
 
@@ -671,12 +653,7 @@ const AuthFlow: React.FC<Props> = ({ onLogin }) => {
                     )}
                   </button>
 
-                  {/* Status */}
-                  <p className="text-center text-[10px] text-zinc-700 px-4 leading-relaxed">
-                    {backendStatus === 'online'
-                      ? '🟢 Connected to ArtForge backend'
-                      : '🔴 Backend offline — please check server status'}
-                  </p>
+
                 </form>
               </div>
             )}

@@ -11,6 +11,7 @@ const VirtualTour = lazy(() => import('./components/VirtualTour'));
 const AuthFlow = lazy(() => import('./components/AuthFlow'));
 const AuctionHouse = lazy(() => import('./components/AuctionHouse'));
 const UserProfile = lazy(() => import('./components/UserProfile'));
+const CheckoutPage = lazy(() => import('./components/CheckoutPage'));
 const ArtistDashboard = lazy(() =>
   import('./components/Dashboards').then((module) => ({ default: module.ArtistDashboard }))
 );
@@ -23,8 +24,6 @@ const AdminDashboard = lazy(() =>
 const VisitorDashboard = lazy(() =>
   import('./components/Dashboards').then((module) => ({ default: module.VisitorDashboard }))
 );
-
- 
 
 // ─── AI Assistant ─────────────────────────────────────────────────────────────
 const AiAssistant: React.FC = () => {
@@ -144,7 +143,12 @@ const AiAssistant: React.FC = () => {
                 className="w-9 h-9 bg-amber-500 hover:bg-amber-400 rounded-xl flex items-center justify-center text-black transition-all btn-shine flex-shrink-0 shadow-lg shadow-amber-500/20"
               >
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2.5"
+                    d="M5 10l7-7m0 0l7 7m-7-7v18"
+                  />
                 </svg>
               </button>
             </div>
@@ -156,8 +160,18 @@ const AiAssistant: React.FC = () => {
           className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 text-black flex items-center justify-center shadow-[0_8px_30px_rgba(245,158,11,0.4)] hover:shadow-[0_8px_40px_rgba(245,158,11,0.6)] hover:scale-110 active:scale-95 transition-all duration-300"
           aria-label="Open AI Guide"
         >
-          <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+          <svg
+            className="w-5 h-5 sm:w-6 sm:h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
+            />
           </svg>
         </button>
       )}
@@ -196,7 +210,9 @@ const StatsTicker: React.FC<{ artworks: Artwork[] }> = ({ artworks }) => {
 };
 
 // ─── Main App ─────────────────────────────────────────────────────────────────
-const SectionLoader: React.FC<{ label?: string }> = ({ label = 'Loading ArtForge experience...' }) => (
+const SectionLoader: React.FC<{ label?: string }> = ({
+  label = 'Loading ArtForge experience...',
+}) => (
   <div className="flex min-h-[40vh] items-center justify-center px-6 py-20">
     <div className="glass max-w-md rounded-[2rem] px-8 py-10 text-center shadow-[0_24px_80px_rgba(0,0,0,0.45)]">
       <div className="mx-auto mb-5 h-12 w-12 animate-spin rounded-full border-2 border-white/10 border-t-amber-500" />
@@ -208,7 +224,18 @@ const SectionLoader: React.FC<{ label?: string }> = ({ label = 'Loading ArtForge
 
 const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [activeView, setActiveView] = useState<'gallery'|'exhibitions'|'auctions'|'dashboard'|'sold'|'timeline'|'profile'|'login'|'cart'|'checkout'>('login');
+  const [activeView, setActiveView] = useState<
+    | 'gallery'
+    | 'exhibitions'
+    | 'auctions'
+    | 'dashboard'
+    | 'sold'
+    | 'timeline'
+    | 'profile'
+    | 'login'
+    | 'cart'
+    | 'checkout'
+  >('login');
   const [artworks, setArtworks] = useState<Artwork[]>([]);
   const [selectedArtwork, setSelectedArtwork] = useState<Artwork | null>(null);
   const [isTourActive, setIsTourActive] = useState(false);
@@ -218,18 +245,77 @@ const App: React.FC = () => {
   const [isAuthLoading, setIsAuthLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState('All');
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
-  useEffect(() => { hybridBackend.init().then(() => { hybridBackend.fetchCurrentUser().then((user) => { setCurrentUser(user); if (user) setActiveView('gallery'); setIsAuthLoading(false); }); hybridBackend.getArtworks().then(setArtworks); }); }, []);
-  const addToCart = (art: Artwork) => { if (!cart.find(c => c.id === art.id)) setCart(prev => [...prev, art]); };
-  const removeFromCart = (id: string) => setCart(prev => prev.filter(c => c.id !== id));
+  useEffect(() => {
+    hybridBackend.init().then(() => {
+      hybridBackend.fetchCurrentUser().then((user) => {
+        setCurrentUser(user);
+        if (user) setActiveView('gallery');
+        setIsAuthLoading(false);
+      });
+      hybridBackend.getArtworks().then(setArtworks);
+    });
+  }, []);
+  const addToCart = (art: Artwork) => {
+    if (!cart.find((c) => c.id === art.id)) setCart((prev) => [...prev, art]);
+  };
+  const removeFromCart = (id: string) => setCart((prev) => prev.filter((c) => c.id !== id));
   const cartTotal = cart.reduce((sum, a) => sum + a.price, 0);
-  const handleCheckout = async () => { if (!currentUser || cart.length === 0) return; for (const art of cart) { await hybridBackend.purchaseArtwork(art.id, currentUser); } setCart([]); await refreshData(); const u = await hybridBackend.fetchCurrentUser(); if (u) setCurrentUser(u); setActiveView('gallery'); };
-  const refreshData = async () => { const a = await hybridBackend.getArtworks(); setArtworks(a); };
-  const handleLogout = () => { hybridBackend.logout(); setCurrentUser(null); setActiveView('login'); };
-  const handleArtworkAction = async (art: Artwork) => { if (!currentUser) { alert('Please sign in.'); return; } if (art.isAuction) { setActiveView('auctions'); setSelectedArtwork(null); return; } const success = await hybridBackend.purchaseArtwork(art.id, currentUser); if (success) { await refreshData(); const updatedUser = await hybridBackend.fetchCurrentUser(); if (updatedUser) setCurrentUser(updatedUser); setSelectedArtwork(null); } };
-  const filteredArtworks = artworks.filter((a) => { const q = searchQuery.toLowerCase(); return (a.title.toLowerCase().includes(q) || a.artist.toLowerCase().includes(q) || a.category.toLowerCase().includes(q)) && (activeCategory === 'All' || a.category === activeCategory) && (activeView === 'sold' ? !a.isListed : a.isListed); });
+  const handleCheckout = async () => {
+    if (!currentUser || cart.length === 0) return;
+    for (const art of cart) {
+      await hybridBackend.purchaseArtwork(art.id, currentUser);
+    }
+    setCart([]);
+    await refreshData();
+    const u = await hybridBackend.fetchCurrentUser();
+    if (u) setCurrentUser(u);
+    setActiveView('gallery');
+  };
+  const refreshData = async () => {
+    const a = await hybridBackend.getArtworks();
+    setArtworks(a);
+  };
+  const handleLogout = () => {
+    hybridBackend.logout();
+    setCurrentUser(null);
+    setActiveView('login');
+  };
+  const handleArtworkAction = async (art: Artwork) => {
+    if (!currentUser) {
+      alert('Please sign in.');
+      return;
+    }
+    if (art.isAuction) {
+      setActiveView('auctions');
+      setSelectedArtwork(null);
+      return;
+    }
+    addToCart(art);
+    setActiveView('checkout');
+    setSelectedArtwork(null);
+  };
+  const filteredArtworks = artworks.filter((a) => {
+    const q = searchQuery.toLowerCase();
+    return (
+      ((a.title && a.title.toLowerCase().includes(q)) ||
+        (a.artist && a.artist.toLowerCase().includes(q)) ||
+        (a.category && a.category.toLowerCase().includes(q))) &&
+      (activeCategory === 'All' || a.category === activeCategory) &&
+      (activeView === 'sold' ? !a.isListed : a.isListed)
+    );
+  });
   const categories = ['All', ...Array.from(new Set(artworks.map((a) => a.category)))];
   const renderContent = () => {
-    if (activeView === 'login' || !currentUser) { return (<AuthFlow onLogin={(u) => { setCurrentUser(u); setActiveView('gallery'); }} />); }
+    if (activeView === 'login' || !currentUser) {
+      return (
+        <AuthFlow
+          onLogin={(u) => {
+            setCurrentUser(u);
+            setActiveView('gallery');
+          }}
+        />
+      );
+    }
     if (activeView === 'dashboard') {
       if (!currentUser) {
         return (
@@ -267,13 +353,21 @@ const App: React.FC = () => {
       }
       switch (currentUser.role) {
         case UserRole.ARTIST:
-          return <ArtistDashboard artworks={artworks} user={currentUser} onUpdateUser={setCurrentUser} />;
+          return (
+            <ArtistDashboard artworks={artworks} user={currentUser} onUpdateUser={setCurrentUser} />
+          );
         case UserRole.CURATOR:
           return <CuratorDashboard user={currentUser} onUpdateUser={setCurrentUser} />;
         case UserRole.ADMIN:
           return <AdminDashboard user={currentUser} onUpdateUser={setCurrentUser} />;
         default:
-          return <VisitorDashboard artworks={artworks} user={currentUser} onUpdateUser={setCurrentUser} />;
+          return (
+            <VisitorDashboard
+              artworks={artworks}
+              user={currentUser}
+              onUpdateUser={setCurrentUser}
+            />
+          );
       }
     }
     if (activeView === 'profile') {
@@ -288,6 +382,18 @@ const App: React.FC = () => {
           onSelectArtwork={setSelectedArtwork}
           onBackToGallery={() => setActiveView('gallery')}
           searchQuery={searchQuery}
+        />
+      );
+    }
+    if (activeView === 'checkout') {
+      return (
+        <CheckoutPage
+          cart={cart}
+          cartTotal={cartTotal}
+          user={currentUser!}
+          onCheckout={handleCheckout}
+          onBack={() => setActiveView('gallery')}
+          onRemove={removeFromCart}
         />
       );
     }
@@ -308,8 +414,8 @@ const App: React.FC = () => {
             {INITIAL_EXHIBITIONS.filter(
               (ex) =>
                 !searchQuery ||
-                ex.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                ex.description.toLowerCase().includes(searchQuery.toLowerCase())
+                (ex.title && ex.title.toLowerCase().includes(searchQuery.toLowerCase())) ||
+                (ex.description && ex.description.toLowerCase().includes(searchQuery.toLowerCase()))
             ).map((ex, idx) => (
               <div
                 key={ex.id}

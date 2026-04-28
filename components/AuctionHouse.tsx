@@ -16,8 +16,8 @@ const AuctionHouse: React.FC<Props & { searchQuery?: string }> = ({ user, artwor
   const auctions = artworks.filter(a => {
     const isMatched = a.isAuction;
     const matchesSearch = !searchQuery || 
-      a.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-      a.artist.toLowerCase().includes(searchQuery.toLowerCase());
+      (a.title && a.title.toLowerCase().includes(searchQuery.toLowerCase())) || 
+      (a.artist && a.artist.toLowerCase().includes(searchQuery.toLowerCase()));
     return isMatched && matchesSearch;
   });
   const [timers, setTimers] = useState<Record<string, string>>({});

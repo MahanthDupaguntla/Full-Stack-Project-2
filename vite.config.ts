@@ -5,8 +5,8 @@ import react from '@vitejs/plugin-react';
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, '.', '');
 
-  // Resolve the backend URL — check both env vars
-  const backendUrl = env.VITE_API_URL || env.VITE_BACKEND_URL || '';
+  // Safely get backend URL from any possible source
+  const backendUrl = process.env.VITE_API_URL || process.env.VITE_BACKEND_URL || env.VITE_API_URL || env.VITE_BACKEND_URL || '';
 
   return {
     server: {
@@ -19,7 +19,6 @@ export default defineConfig(({ mode }) => {
           secure: true,
           configure: (proxy) => {
             proxy.on('proxyReq', (proxyReq) => {
-              // Remove Origin header so Railway doesn't treat this as a CORS request
               proxyReq.removeHeader('origin');
             });
           },
@@ -28,17 +27,17 @@ export default defineConfig(({ mode }) => {
     },
     plugins: [react()],
     define: {
-      'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY || ''),
-      'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY || ''),
-      // Expose both VITE_API_URL and VITE_BACKEND_URL so apiService.ts can
-      // reach the Railway backend in production (Vercel build).
-      'import.meta.env.VITE_API_URL': JSON.stringify(env.VITE_API_URL || ''),
-      'import.meta.env.VITE_BACKEND_URL': JSON.stringify(env.VITE_BACKEND_URL || ''),
+      'process.env.API_KEY': JSON.stringify(process.env.GEMINI_API_KEY || env.GEMINI_API_KEY || ''),
+      'process.env.GEMINI_API_KEY': JSON.stringify(process.env.GEMINI_API_KEY || env.GEMINI_API_KEY || ''),
     },
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),
       },
     },
+    build: {
+      outDir: 'dist',
+      sourcemap: false
+    }
   };
 });

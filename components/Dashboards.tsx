@@ -63,6 +63,32 @@ export const ArtistDashboard: React.FC<{ artworks: Artwork[], user: User, onUpda
     }
   };
 
+  const resizeImage = (dataUrl: string, callback: (resized: string) => void) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const maxDim = 800;
+      let { width, height } = img;
+      if (width > height && width > maxDim) {
+        height *= maxDim / width;
+        width = maxDim;
+      } else if (height > maxDim) {
+        width *= maxDim / height;
+        height = maxDim;
+      }
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      if(ctx) {
+        ctx.drawImage(img, 0, 0, width, height);
+        callback(canvas.toDataURL('image/jpeg', 0.7));
+      } else {
+        callback(dataUrl);
+      }
+    };
+    img.src = dataUrl;
+  };
+
   const capturePhoto = () => {
     if (videoRef.current && canvasRef.current) {
       const context = canvasRef.current.getContext('2d');
@@ -70,10 +96,12 @@ export const ArtistDashboard: React.FC<{ artworks: Artwork[], user: User, onUpda
         canvasRef.current.width = videoRef.current.videoWidth;
         canvasRef.current.height = videoRef.current.videoHeight;
         context.drawImage(videoRef.current, 0, 0);
-        setCapturedImage(canvasRef.current.toDataURL('image/png'));
-        const stream = videoRef.current.srcObject as MediaStream;
-        stream?.getTracks().forEach(track => track.stop());
-        setCameraActive(false);
+        resizeImage(canvasRef.current.toDataURL('image/png'), (resized) => {
+          setCapturedImage(resized);
+          const stream = videoRef.current?.srcObject as MediaStream;
+          stream?.getTracks().forEach(track => track.stop());
+          setCameraActive(false);
+        });
       }
     }
   };
@@ -83,7 +111,9 @@ export const ArtistDashboard: React.FC<{ artworks: Artwork[], user: User, onUpda
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setCapturedImage(reader.result as string);
+        resizeImage(reader.result as string, (resized) => {
+          setCapturedImage(resized);
+        });
       };
       reader.readAsDataURL(file);
     }
@@ -298,6 +328,7 @@ export const ArtistDashboard: React.FC<{ artworks: Artwork[], user: User, onUpda
                   ) : cameraActive ? (
                     <div className="space-y-6">
                       <video ref={videoRef} autoPlay className="w-full rounded-xl shadow-2xl aspect-video object-cover" />
+                      <canvas ref={canvasRef} className="hidden" />
                       <button type="button" onClick={capturePhoto} className="bg-amber-500 text-black px-8 sm:px-10 py-3 rounded-full text-xs font-bold shadow-lg">Snap Photo</button>
                     </div>
                   ) : (
@@ -422,6 +453,7 @@ export const AdminDashboard: React.FC<{ user: User, onUpdateUser: (u: User) => v
   const [activeTab, setActiveTab] = useState<'users' | 'settings'>('users');
   const [brandStory, setBrandStory] = useState<string>('');
   const [isForging, setIsForging] = useState(false);
+  const [filterIdentity, setFilterIdentity] = useState('');
 
   const handleRoleChange = async (userId: string, newRole: UserRole) => {
     await hybridBackend.updateUserRole(userId, newRole);
@@ -448,6 +480,8 @@ export const AdminDashboard: React.FC<{ user: User, onUpdateUser: (u: User) => v
               <input 
                 type="text" 
                 placeholder="Filter identity..." 
+                value={filterIdentity}
+                onChange={(e) => setFilterIdentity(e.target.value)}
                 className="w-full bg-white/5 border border-white/10 rounded-xl pl-9 pr-4 py-2.5 text-xs text-white outline-none focus:border-amber-500"
               />
             </div>
@@ -488,7 +522,7 @@ export const AdminDashboard: React.FC<{ user: User, onUpdateUser: (u: User) => v
                  </tr>
                </thead>
                <tbody className="divide-y divide-white/5">
-                 {users.map(u => (
+                 {users.filter(u => !filterIdentity || u.name.toLowerCase().includes(filterIdentity.toLowerCase()) || u.email.toLowerCase().includes(filterIdentity.toLowerCase())).map(u => (
                    <tr key={u.id} className="group hover:bg-white/[0.02] transition-colors">
                      <td className="py-5 sm:py-6">
                        <div className="flex items-center gap-3 sm:gap-4">
@@ -603,6 +637,7 @@ export const CuratorDashboard: React.FC<{ user: User, onUpdateUser: (u: User) =>
     hybridBackend.getExhibitions().then(setExhibitions);
   }, []);
   const [showCreate, setShowCreate] = useState(false);
+  const [searchNarrative, setSearchNarrative] = useState('');
 
   const handleStatusChange = async (ex: Exhibition, status: Exhibition['status']) => {
     await hybridBackend.updateExhibition({ ...ex, status });
@@ -622,6 +657,8 @@ export const CuratorDashboard: React.FC<{ user: User, onUpdateUser: (u: User) =>
               <input 
                 type="text" 
                 placeholder="Search narratives..." 
+                value={searchNarrative}
+                onChange={(e) => setSearchNarrative(e.target.value)}
                 className="w-full bg-white/5 border border-white/10 rounded-xl pl-9 pr-4 py-2.5 text-xs text-white outline-none focus:border-amber-500"
               />
             </div>
@@ -632,7 +669,7 @@ export const CuratorDashboard: React.FC<{ user: User, onUpdateUser: (u: User) =>
        </header>
 
        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-          {exhibitions.map(ex => (
+          {exhibitions.filter(ex => !searchNarrative || ex.title.toLowerCase().includes(searchNarrative.toLowerCase()) || ex.theme.toLowerCase().includes(searchNarrative.toLowerCase()) || ex.description.toLowerCase().includes(searchNarrative.toLowerCase())).map(ex => (
             <div key={ex.id} className="glass rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden flex flex-col border border-white/5 hover:border-white/20 transition-all group shadow-xl">
               <div className="h-40 sm:h-48 relative overflow-hidden">
                 <img src={ex.bannerUrl} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700" />
