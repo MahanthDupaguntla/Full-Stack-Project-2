@@ -146,6 +146,28 @@ const Navbar: React.FC<NavbarProps> = ({
                 value={searchQuery}
                 onChange={(e) => {
                   const val = e.target.value;
+                  const lower = val.trim().toLowerCase();
+                  
+                  const routes: Record<string, any> = {
+                    'gallery': 'gallery',
+                    'explore': 'gallery',
+                    'auctions': 'auctions',
+                    'live': 'auctions',
+                    'exhibitions': 'exhibitions',
+                    'curated': 'exhibitions',
+                    'dashboard': 'dashboard',
+                    'profile': 'profile',
+                    'account': 'profile',
+                    'ledger': 'timeline',
+                    'timeline': 'timeline'
+                  };
+
+                  if (routes[lower]) {
+                    onViewChange(routes[lower]);
+                    onSearch('');
+                    return;
+                  }
+
                   onSearch(val);
                   if (val.trim() !== '' && !['gallery', 'exhibitions', 'auctions'].includes(activeView)) {
                     onViewChange('gallery');
