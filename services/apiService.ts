@@ -37,7 +37,7 @@ export const apiLogin = async (email: string, password?: string) => {
     }
     const data = await res.json();
     if (data.token) setToken(data.token);
-    return data.user;
+    return data;
 };
 
 export const apiRegister = async (name: string, email: string, password?: string, role?: UserRole) => {
@@ -52,11 +52,29 @@ export const apiRegister = async (name: string, email: string, password?: string
     }
     const data = await res.json();
     if (data.token) setToken(data.token);
-    return data.user;
+    return data;
 };
 
-export const apiVerifyOtp = async (email: string, otp: string) => apiLogin(email, otp);
-export const apiResendOtp = async (email: string) => {};
+export const apiVerifyOtp = async (email: string, otp: string) => {
+    const res = await fetch(`${API_BASE}/api/auth/verify-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, otp })
+    });
+    if (!res.ok) {
+        const err = await res.json().catch(() => null);
+        throw new Error(err?.message || 'Invalid OTP');
+    }
+    const data = await res.json();
+    if (data.token) setToken(data.token);
+    return data;
+};
+
+export const apiResendOtp = async (email: string) => {
+    // Calling login again will generate and send a new OTP if we don't change passwords
+    // Note: We need the password to call login. If we don't have it, we might need a dedicated resend endpoint.
+    // For now, this is a placeholder.
+};
 
 export const hybridBackend = {
   available: true,

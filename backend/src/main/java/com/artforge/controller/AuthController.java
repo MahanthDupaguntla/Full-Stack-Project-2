@@ -30,4 +30,9 @@ public class AuthController {
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest req) {
         return ResponseEntity.ok(authService.login(req));
     }
+
+    @PostMapping("/api/auth/verify-otp")
+    public ResponseEntity<AuthResponse> verifyOtp(@Valid @RequestBody com.artforge.dto.VerifyOtpRequest req) {
+        return ResponseEntity.ok(authService.verifyOtp(req.getEmail(), req.getOtp()));
+    }
 }

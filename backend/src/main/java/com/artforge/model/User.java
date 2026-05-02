@@ -62,6 +62,12 @@ public class User {
     @Builder.Default
     private List<Transaction> transactions = new ArrayList<>();
 
+    @Column(name = "otp_code", length = 6)
+    private String otpCode;
+
+    @Column(name = "otp_expiry")
+    private LocalDateTime otpExpiry;
+
     @Column(name = "is_verified", nullable = false)
     @Builder.Default
     private boolean isVerified = false;

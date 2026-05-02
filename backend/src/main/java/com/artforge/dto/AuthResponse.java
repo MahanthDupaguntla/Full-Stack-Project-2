@@ -12,6 +12,7 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AuthResponse {
+    private String message;
     private String token;
     private String id;
     private String name;
